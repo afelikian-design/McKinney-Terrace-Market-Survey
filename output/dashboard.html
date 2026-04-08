@@ -3,101 +3,347 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DFW Market Survey Dashboard</title>
+<title>McKinney Terrace Market Survey | Buchanan Street Partners</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
-.header { background: linear-gradient(135deg, #1F4E79, #2980b9); color: white; padding: 24px 40px; }
-.header h1 { font-size: 28px; margin-bottom: 4px; }
-.header p { opacity: 0.85; font-size: 14px; }
-.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; }
-.metric-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
-.metric-card .value { font-size: 28px; font-weight: 700; color: #1F4E79; }
-.metric-card .label { font-size: 12px; color: #666; text-transform: uppercase; margin-top: 4px; }
-.section { background: white; border-radius: 8px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.section h2 { font-size: 20px; color: #1F4E79; margin-bottom: 16px; border-bottom: 2px solid #1F4E79; padding-bottom: 8px; }
-.sub-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
-.sub-metric { background: #f8f9fa; border-radius: 6px; padding: 12px; text-align: center; }
-.sub-metric .val { font-size: 18px; font-weight: 600; color: #1F4E79; }
-.sub-metric .lbl { font-size: 11px; color: #888; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
-.data-table th { background: #1F4E79; color: white; padding: 10px 12px; text-align: left; font-weight: 600; position: sticky; top: 0; }
-.data-table td { padding: 8px 12px; border-bottom: 1px solid #e8e8e8; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+
+/* ---- HEADER / BRANDING ---- */
+.top-bar {
+    background: #FFFFFF;
+    border-bottom: 3px solid #1F4E79;
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.brand-logo {
+    width: 48px;
+    height: 48px;
+    background: #1F4E79;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: -1px;
+}
+.brand-text {
+    line-height: 1.2;
+}
+.brand-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1F4E79;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.brand-sub {
+    font-size: 11px;
+    color: #888;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+.top-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+.btn-primary {
+    background: #1F4E79;
+    color: white;
+}
+.btn-primary:hover { background: #163a5c; }
+.btn-export {
+    background: #FFFFFF;
+    color: #1F4E79;
+    border: 2px solid #1F4E79;
+}
+.btn-export:hover { background: #EBF0F5; }
+.btn-icon { font-size: 16px; }
+
+/* ---- TITLE BAR ---- */
+.title-bar {
+    background: linear-gradient(135deg, #1F4E79 0%, #2C6FAC 100%);
+    color: white;
+    padding: 20px 40px;
+}
+.title-bar h1 {
+    font-size: 24px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+.title-bar h1 strong { font-weight: 700; }
+.title-bar .subtitle {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+}
+
+/* ---- LAYOUT ---- */
+.container { max-width: 1500px; margin: 0 auto; padding: 24px; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.metric-card {
+    background: white;
+    border-radius: 6px;
+    padding: 20px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    text-align: center;
+    border-top: 3px solid #1F4E79;
+}
+.metric-card .value { font-size: 26px; font-weight: 700; color: #1F4E79; }
+.metric-card .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+.section {
+    background: white;
+    border-radius: 6px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.section h2 {
+    font-size: 16px;
+    color: #1F4E79;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    border-bottom: 2px solid #1F4E79;
+    padding-bottom: 8px;
+}
+
+/* ---- SUMMARY TABLE ---- */
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.section-title-left {
+    background: #1F4E79;
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.section-title-right {
+    background: #1F4E79;
+    color: white;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.spacer-hdr {
+    background: #f0f2f5;
+    width: 8px;
+    border: none;
+}
+.summary-hdr {
+    background: #2C6FAC;
+    color: white;
+    padding: 8px 10px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.summary-hdr:first-child { text-align: left; }
+.summary-hdr-r {
+    background: #2C6FAC;
+    color: white;
+    padding: 8px 10px;
+    text-align: right;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.summary-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+}
+.summary-table td.spacer {
+    background: #f0f2f5;
+    width: 8px;
+    border: none;
+}
+.summary-table td.center { text-align: center; }
+.summary-table td.right { text-align: right; }
+.subject-row td { background: #FFF8E1 !important; }
+
+/* ---- UNIT TYPE TABLES ---- */
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th {
+    background: #1F4E79;
+    color: white;
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+}
+.data-table td { padding: 7px 12px; border-bottom: 1px solid #e8e8e8; }
 .data-table tr:hover { background: #f0f4f8; }
+.data-table tr.subject-row { background: #FFF8E1; }
+.data-table tr.subject-row:hover { background: #FFF3CD; }
 .data-table .center { text-align: center; }
 .data-table .right { text-align: right; }
+
 .chart-container { width: 100%; height: 420px; }
-.conc-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin: 20px 0; }
-.conc-box h3 { color: #856404; margin-bottom: 8px; }
-.conc-box ul { margin-left: 20px; }
-.conc-box li { margin: 4px 0; }
-.footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
+
+.sub-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0 16px; }
+.sub-metric { background: #f8f9fa; border-radius: 4px; padding: 10px; text-align: center; }
+.sub-metric .val { font-size: 16px; font-weight: 700; color: #1F4E79; }
+.sub-metric .lbl { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+
 .table-scroll { max-height: 500px; overflow-y: auto; }
+
+.footer {
+    text-align: center;
+    padding: 24px;
+    color: #aaa;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    border-top: 1px solid #ddd;
+    margin-top: 20px;
+}
+.footer strong { color: #1F4E79; }
+
 @media (max-width: 768px) {
     .metrics, .sub-metrics { grid-template-columns: repeat(2, 1fr); }
+    .top-bar { flex-direction: column; gap: 12px; }
 }
 </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>DFW Multifamily Market Survey</h1>
-    <p>130 units across 7 properties &mdash; Generated April 08, 2026 at 07:31 PM</p>
+<!-- TOP BAR WITH BRANDING AND BUTTONS -->
+<div class="top-bar">
+    <div class="brand">
+        <div class="brand-logo">BSP</div>
+        <div class="brand-text">
+            <div class="brand-name">Buchanan Street Partners</div>
+            <div class="brand-sub">Real Estate Investment Management</div>
+        </div>
+    </div>
+    <div class="top-actions">
+        <button class="btn btn-primary" onclick="alert('Update Now will scrape all 7 property websites for live data.\n\nTo enable live scraping, run this locally:\n  python main.py --live\n\nThis static dashboard uses data captured at generation time.')">
+            <span class="btn-icon">&#8635;</span> Update Now
+        </button>
+        <button class="btn btn-export" onclick="alert('To export to Excel, run locally:\n  python main.py\n\nThis generates a formatted .xlsx file matching the institutional reference format.')">
+            <span class="btn-icon">&#8681;</span> Export
+        </button>
+    </div>
+</div>
+
+<!-- TITLE BAR -->
+<div class="title-bar">
+    <h1><strong>McKinney Terrace</strong> &mdash; Market Survey Comparison</h1>
+    <div class="subtitle">130 available units across 7 properties &nbsp;|&nbsp; McKinney &amp; Allen, TX &nbsp;|&nbsp; April 08, 2026 at 07:58 PM</div>
 </div>
 
 <div class="container">
 
+<!-- METRICS -->
 <div class="metrics">
     <div class="metric-card">
         <div class="value">$1,634</div>
-        <div class="label">Avg Asking Rent</div>
+        <div class="label">Market Avg Rent</div>
     </div>
     <div class="metric-card">
         <div class="value">$1.87</div>
-        <div class="label">Avg PSF</div>
+        <div class="label">Market Avg PSF</div>
     </div>
     <div class="metric-card">
         <div class="value">905</div>
-        <div class="label">Avg Sq Ft</div>
+        <div class="label">Avg Unit Size (SF)</div>
     </div>
     <div class="metric-card">
         <div class="value">130</div>
-        <div class="label">Total Units</div>
+        <div class="label">Total Available Units</div>
     </div>
 </div>
 
-<div class="conc-box"><h3>Active Concessions</h3><ul><li><span style="color:#7030A0;font-weight:600">The Bridge at McKinney:</span> Up to 6 weeks free rent</li></ul></div>
-
+<!-- SUMMARY TABLE -->
 <div class="section">
-    <h2>Summary by Property</h2>
-    <table class="data-table">
-        <thead><tr>
-            <th>Property</th><th>Studios</th><th>1BR</th><th>2BR</th><th>3BR</th>
-            <th>Total</th><th>Avg Rent</th><th>Avg PSF</th><th>Avg Sq Ft</th>
-        </tr></thead>
-        <tbody><tr><td style="color:#00B0F0;font-weight:600">Collin Square</td><td class="center">3</td><td class="center">8</td><td class="center">6</td><td class="center">3</td><td class="center"><b>20</b></td><td class="right">$1,689</td><td class="right">$1.88</td><td class="right">925</td></tr><tr><td style="color:#C00000;font-weight:600">Davis at the Square</td><td class="center">6</td><td class="center">10</td><td class="center">6</td><td class="center">-</td><td class="center"><b>22</b></td><td class="right">$1,451</td><td class="right">$2.17</td><td class="right">716</td></tr><tr><td style="color:#FF6600;font-weight:600">Kinstead</td><td class="center">3</td><td class="center">10</td><td class="center">7</td><td class="center">2</td><td class="center"><b>22</b></td><td class="right">$1,695</td><td class="right">$1.94</td><td class="right">907</td></tr><tr><td style="color:#0070C0;font-weight:600">Magnolia on the Green</td><td class="center">-</td><td class="center">8</td><td class="center">6</td><td class="center">-</td><td class="center"><b>14</b></td><td class="right">$1,714</td><td class="right">$1.91</td><td class="right">904</td></tr><tr><td style="color:#FFC000;font-weight:600">McKinney Terrace</td><td class="center">-</td><td class="center">8</td><td class="center">6</td><td class="center">3</td><td class="center"><b>17</b></td><td class="right">$1,625</td><td class="right">$1.76</td><td class="right">946</td></tr><tr><td style="color:#7030A0;font-weight:600">The Bridge at McKinney</td><td class="center">-</td><td class="center">10</td><td class="center">6</td><td class="center">2</td><td class="center"><b>18</b></td><td class="right">$1,498</td><td class="right">$1.57</td><td class="right">947</td></tr><tr><td style="color:#00B050;font-weight:600">The Link at Twin Creeks</td><td class="center">-</td><td class="center">8</td><td class="center">6</td><td class="center">3</td><td class="center"><b>17</b></td><td class="right">$1,815</td><td class="right">$1.75</td><td class="right">1,039</td></tr><tr style="background:#D6E4F0"><td style="font-weight:700">Wtd Avg / Total</td><td class="center"><b>12</b></td><td class="center"><b>62</b></td><td class="center"><b>43</b></td><td class="center"><b>13</b></td><td class="center"><b>130</b></td><td class="right"><b>$1,634</b></td><td class="right"><b>$1.87</b></td><td class="right"><b>905</b></td></tr></tbody>
+    <h2>Competitive Set Summary</h2>
+    
+    <table class="summary-table">
+        <thead>
+            <tr>
+                <th colspan="8" class="section-title-left">SUMMARY</th>
+                <th class="spacer-hdr"></th>
+                <th colspan="8" class="section-title-right">AVERAGE MARKET RENTS AS OF 04/08/2026</th>
+            </tr>
+            <tr>
+                
+        <th class="summary-hdr">PROPERTY</th>
+        <th class="summary-hdr">Concessions</th>
+        <th class="summary-hdr">Studio</th>
+        <th class="summary-hdr">1BR</th>
+        <th class="summary-hdr">2BR</th>
+        <th class="summary-hdr">3BR</th>
+        <th class="summary-hdr">TOTAL</th>
+        <th class="summary-hdr">AVG SQ FT</th>
+    
+                <th class="spacer-hdr"></th>
+                
+        <th class="summary-hdr-r">Studio MKT</th><th class="summary-hdr-r">Studio PSF</th>
+        <th class="summary-hdr-r">1BR MKT</th><th class="summary-hdr-r">1BR PSF</th>
+        <th class="summary-hdr-r">2BR MKT</th><th class="summary-hdr-r">2BR PSF</th>
+        <th class="summary-hdr-r">3BR MKT</th><th class="summary-hdr-r">3BR PSF</th>
+    
+            </tr>
+        </thead>
+        <tbody><tr ><td style="color:#00B0F0;font-weight:500">Collin Square</td><td class="center"></td><td class="center">3</td><td class="center">8</td><td class="center">6</td><td class="center">3</td><td class="center"><b>20</b></td><td class="right">924</td><td class="spacer"></td><td class="right">$1,392</td><td class="right">$2.38</td><td class="right">$1,401</td><td class="right">$1.90</td><td class="right">$1,853</td><td class="right">$1.69</td><td class="right">$2,424</td><td class="right">$1.70</td></tr><tr ><td style="color:#C00000;font-weight:500">Davis at the Square</td><td class="center"></td><td class="center">6</td><td class="center">10</td><td class="center">6</td><td class="center">0</td><td class="center"><b>22</b></td><td class="right">716</td><td class="spacer"></td><td class="right">$1,147</td><td class="right">$2.87</td><td class="right">$1,388</td><td class="right">$1.97</td><td class="right">$1,858</td><td class="right">$1.80</td><td class="right"></td><td class="right"></td></tr><tr ><td style="color:#FF6600;font-weight:500">Kinstead</td><td class="center"></td><td class="center">3</td><td class="center">10</td><td class="center">7</td><td class="center">2</td><td class="center"><b>22</b></td><td class="right">906</td><td class="spacer"></td><td class="right">$1,363</td><td class="right">$2.46</td><td class="right">$1,487</td><td class="right">$2.00</td><td class="right">$1,909</td><td class="right">$1.70</td><td class="right">$2,481</td><td class="right">$1.67</td></tr><tr ><td style="color:#0070C0;font-weight:500">Magnolia on the Green</td><td class="center"></td><td class="center">0</td><td class="center">8</td><td class="center">6</td><td class="center">0</td><td class="center"><b>14</b></td><td class="right">903</td><td class="spacer"></td><td class="right"></td><td class="right"></td><td class="right">$1,492</td><td class="right">$1.97</td><td class="right">$2,009</td><td class="right">$1.83</td><td class="right"></td><td class="right"></td></tr><tr ><td style="color:#7030A0;font-weight:500">The Bridge at McKinney</td><td class="center">Up to 6 weeks free rent</td><td class="center">0</td><td class="center">10</td><td class="center">6</td><td class="center">2</td><td class="center"><b>18</b></td><td class="right">946</td><td class="spacer"></td><td class="right"></td><td class="right"></td><td class="right">$1,174</td><td class="right">$1.54</td><td class="right">$1,616</td><td class="right">$1.48</td><td class="right">$2,768</td><td class="right">$1.94</td></tr><tr ><td style="color:#00B050;font-weight:500">The Link at Twin Creeks</td><td class="center"></td><td class="center">0</td><td class="center">8</td><td class="center">6</td><td class="center">3</td><td class="center"><b>17</b></td><td class="right">1,038</td><td class="spacer"></td><td class="right"></td><td class="right"></td><td class="right">$1,484</td><td class="right">$1.80</td><td class="right">$1,948</td><td class="right">$1.69</td><td class="right">$2,433</td><td class="right">$1.77</td></tr><tr style="background:#D6E4F0;font-weight:700"><td style="font-weight:700;color:#1F4E79">Wtd Avg / Total</td><td class="center">Up to 6 weeks free rent</td><td class="center">12</td><td class="center">54</td><td class="center">37</td><td class="center">10</td><td class="center"><b>113</b></td><td class="right">898</td><td class="spacer"></td><td class="right">$1,262</td><td class="right">$2.64</td><td class="right">$1,398</td><td class="right">$1.86</td><td class="right">$1,867</td><td class="right">$1.70</td><td class="right">$2,507</td><td class="right">$1.76</td></tr><tr><td colspan="19" style="height:12px;border:none"></td></tr><tr style="background:#FFF8E1;font-weight:600;border-top:3px solid #1F4E79"><td style="font-weight:700;color:#FFC000">McKinney Terrace</td><td class="center"></td><td class="center">0</td><td class="center">8</td><td class="center">6</td><td class="center">3</td><td class="center"><b>17</b></td><td class="right">946</td><td class="spacer"></td><td class="right"></td><td class="right"></td><td class="right">$1,356</td><td class="right">$1.92</td><td class="right">$1,714</td><td class="right">$1.62</td><td class="right">$2,165</td><td class="right">$1.61</td></tr></tbody>
     </table>
 </div>
 
 <div class="section">
-    <h2>Studios</h2>
+    <h2>Studios &mdash; Market Comparison</h2>
     <div class="sub-metrics">
-        <div class="sub-metric"><div class="val">12</div><div class="lbl">Units</div></div>
-        <div class="sub-metric"><div class="val">$1,262</div><div class="lbl">Avg Rent</div></div>
-        <div class="sub-metric"><div class="val">$2.64</div><div class="lbl">Avg PSF</div></div>
-        <div class="sub-metric"><div class="val">493</div><div class="lbl">Avg Sq Ft</div></div>
+        <div class="sub-metric"><div class="val">12</div><div class="lbl">Available Units</div></div>
+        <div class="sub-metric"><div class="val">$1,262</div><div class="lbl">Avg Asking Rent</div></div>
+        <div class="sub-metric"><div class="val">$2.64</div><div class="lbl">Avg Price / SF</div></div>
+        <div class="sub-metric"><div class="val">493</div><div class="lbl">Avg Unit Size</div></div>
     </div>
     <div id="chart_studios" class="chart-container"></div>
     <script>
     Plotly.newPlot('chart_studios', [{"x": [574, 574, 610], "y": [1370, 1385, 1420], "text": ["Unit 110<br>S1<br>$1,370<br>574 SF<br>$2.39/SF", "Unit 210<br>S1<br>$1,385<br>574 SF<br>$2.41/SF", "Unit 310<br>S2<br>$1,420<br>610 SF<br>$2.33/SF"], "name": "Collin Square", "mode": "markers", "type": "scatter", "marker": {"color": "#00B0F0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [324, 324, 507, 507, 324, 507], "y": [1070, 1085, 1195, 1210, 1095, 1225], "text": ["Unit 101<br>S1<br>$1,070<br>324 SF<br>$3.30/SF", "Unit 102<br>S1<br>$1,085<br>324 SF<br>$3.35/SF", "Unit 201<br>S2<br>$1,195<br>507 SF<br>$2.36/SF", "Unit 202<br>S2<br>$1,210<br>507 SF<br>$2.39/SF", "Unit 301<br>S1<br>$1,095<br>324 SF<br>$3.38/SF", "Unit 302<br>S2<br>$1,225<br>507 SF<br>$2.42/SF"], "name": "Davis at the Square", "mode": "markers", "type": "scatter", "marker": {"color": "#C00000", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [554, 554, 554], "y": [1350, 1365, 1375], "text": ["Unit S101<br>S1<br>$1,350<br>554 SF<br>$2.44/SF", "Unit S102<br>S1<br>$1,365<br>554 SF<br>$2.46/SF", "Unit S201<br>S1<br>$1,375<br>554 SF<br>$2.48/SF"], "name": "Kinstead", "mode": "markers", "type": "scatter", "marker": {"color": "#FF6600", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [324.0, 329.83673469387753, 335.6734693877551, 341.51020408163265, 347.3469387755102, 353.18367346938777, 359.0204081632653, 364.85714285714283, 370.6938775510204, 376.53061224489795, 382.36734693877554, 388.2040816326531, 394.0408163265306, 399.8775510204082, 405.7142857142857, 411.55102040816325, 417.38775510204084, 423.2244897959184, 429.0612244897959, 434.8979591836735, 440.734693877551, 446.57142857142856, 452.40816326530614, 458.2448979591837, 464.0816326530612, 469.9183673469388, 475.7551020408163, 481.59183673469386, 487.42857142857144, 493.265306122449, 499.1020408163265, 504.9387755102041, 510.7755102040816, 516.6122448979592, 522.4489795918367, 528.2857142857142, 534.1224489795918, 539.9591836734694, 545.795918367347, 551.6326530612245, 557.469387755102, 563.3061224489795, 569.1428571428571, 574.9795918367347, 580.8163265306123, 586.6530612244898, 592.4897959183673, 598.3265306122448, 604.1632653061224, 610.0], "y": [1066.308994178805, 1073.0804482677781, 1079.851902356751, 1086.6233564457239, 1093.394810534697, 1100.16626462367, 1106.937718712643, 1113.7091728016158, 1120.4806268905888, 1127.2520809795617, 1134.0235350685348, 1140.7949891575076, 1147.5664432464805, 1154.3378973354536, 1161.1093514244264, 1167.8808055133993, 1174.6522596023724, 1181.4237136913453, 1188.1951677803181, 1194.9666218692912, 1201.7380759582643, 1208.5095300472371, 1215.28098413621, 1222.0524382251829, 1228.823892314156, 1235.595346403129, 1242.366800492102, 1249.1382545810748, 1255.9097086700478, 1262.6811627590207, 1269.4526168479938, 1276.2240709369667, 1282.9955250259395, 1289.7669791149124, 1296.5384332038855, 1303.3098872928583, 1310.0813413818314, 1316.8527954708043, 1323.6242495597774, 1330.3957036487502, 1337.1671577377233, 1343.9386118266962, 1350.710065915669, 1357.481520004642, 1364.2529740936152, 1371.024428182588, 1377.795882271561, 1384.5673363605338, 1391.3387904495066, 1398.11024453848], "name": "Market Trendline", "mode": "lines", "type": "scatter", "line": {"color": "#333", "width": 2, "dash": "dash"}}], {
-        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8'},
-        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$'},
+        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8', zeroline: false},
+        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$', zeroline: false},
         plot_bgcolor: 'white',
         paper_bgcolor: 'white',
-        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center'},
-        margin: {l: 70, r: 30, t: 20, b: 80},
+        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: {size: 11}},
+        margin: {l: 70, r: 30, t: 10, b: 80},
         hovermode: 'closest',
     }, {responsive: true});
     </script>
@@ -222,22 +468,22 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </div>
 
 <div class="section">
-    <h2>1BR</h2>
+    <h2>1-Bedrooms &mdash; Market Comparison</h2>
     <div class="sub-metrics">
-        <div class="sub-metric"><div class="val">62</div><div class="lbl">Units</div></div>
-        <div class="sub-metric"><div class="val">$1,393</div><div class="lbl">Avg Rent</div></div>
-        <div class="sub-metric"><div class="val">$1.87</div><div class="lbl">Avg PSF</div></div>
-        <div class="sub-metric"><div class="val">749</div><div class="lbl">Avg Sq Ft</div></div>
+        <div class="sub-metric"><div class="val">62</div><div class="lbl">Available Units</div></div>
+        <div class="sub-metric"><div class="val">$1,393</div><div class="lbl">Avg Asking Rent</div></div>
+        <div class="sub-metric"><div class="val">$1.87</div><div class="lbl">Avg Price / SF</div></div>
+        <div class="sub-metric"><div class="val">749</div><div class="lbl">Avg Unit Size</div></div>
     </div>
     <div id="chart_1br" class="chart-container"></div>
     <script>
     Plotly.newPlot('chart_1br', [{"x": [685, 735, 685, 780, 735, 825, 685, 780], "y": [1328, 1395, 1340, 1445, 1405, 1490, 1350, 1455], "text": ["Unit 111<br>A1<br>$1,328<br>685 SF<br>$1.94/SF", "Unit 112<br>A2<br>$1,395<br>735 SF<br>$1.90/SF", "Unit 211<br>A1<br>$1,340<br>685 SF<br>$1.96/SF", "Unit 212<br>A3<br>$1,445<br>780 SF<br>$1.85/SF", "Unit 311<br>A2<br>$1,405<br>735 SF<br>$1.91/SF", "Unit 312<br>A4<br>$1,490<br>825 SF<br>$1.81/SF", "Unit 411<br>A1<br>$1,350<br>685 SF<br>$1.97/SF", "Unit 412<br>A3<br>$1,455<br>780 SF<br>$1.87/SF"], "name": "Collin Square", "mode": "markers", "type": "scatter", "marker": {"color": "#00B0F0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [631, 655, 762, 762, 631, 655, 762, 797, 797, 631], "y": [1305, 1340, 1415, 1430, 1320, 1355, 1445, 1490, 1475, 1310], "text": ["Unit 103<br>A1<br>$1,305<br>631 SF<br>$2.07/SF", "Unit 104<br>A1C<br>$1,340<br>655 SF<br>$2.05/SF", "Unit 203<br>A2<br>$1,415<br>762 SF<br>$1.86/SF", "Unit 204<br>A2<br>$1,430<br>762 SF<br>$1.88/SF", "Unit 303<br>A1<br>$1,320<br>631 SF<br>$2.09/SF", "Unit 304<br>A1C<br>$1,355<br>655 SF<br>$2.07/SF", "Unit 403<br>A2<br>$1,445<br>762 SF<br>$1.90/SF", "Unit 404<br>A3<br>$1,490<br>797 SF<br>$1.87/SF", "Unit 105<br>A3<br>$1,475<br>797 SF<br>$1.85/SF", "Unit 205<br>A1<br>$1,310<br>631 SF<br>$2.08/SF"], "name": "Davis at the Square", "mode": "markers", "type": "scatter", "marker": {"color": "#C00000", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [648, 698, 735, 768, 804, 845, 648, 698, 768, 845], "y": [1395, 1435, 1470, 1505, 1545, 1580, 1400, 1440, 1510, 1590], "text": ["Unit A101<br>A1<br>$1,395<br>648 SF<br>$2.15/SF", "Unit A102<br>A2<br>$1,435<br>698 SF<br>$2.06/SF", "Unit A201<br>A3<br>$1,470<br>735 SF<br>$2.00/SF", "Unit A202<br>A4<br>$1,505<br>768 SF<br>$1.96/SF", "Unit A301<br>A5<br>$1,545<br>804 SF<br>$1.92/SF", "Unit A302<br>A6<br>$1,580<br>845 SF<br>$1.87/SF", "Unit B101<br>A1<br>$1,400<br>648 SF<br>$2.16/SF", "Unit B102<br>A2<br>$1,440<br>698 SF<br>$2.06/SF", "Unit B201<br>A4<br>$1,510<br>768 SF<br>$1.97/SF", "Unit B202<br>A6<br>$1,590<br>845 SF<br>$1.88/SF"], "name": "Kinstead", "mode": "markers", "type": "scatter", "marker": {"color": "#FF6600", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [714, 752, 714, 752, 825, 714, 752, 825], "y": [1445, 1485, 1460, 1500, 1545, 1450, 1490, 1560], "text": ["Unit 1101<br>A1<br>$1,445<br>714 SF<br>$2.02/SF", "Unit 1102<br>A2<br>$1,485<br>752 SF<br>$1.97/SF", "Unit 1201<br>A1<br>$1,460<br>714 SF<br>$2.04/SF", "Unit 1202<br>A2<br>$1,500<br>752 SF<br>$1.99/SF", "Unit 1301<br>A3<br>$1,545<br>825 SF<br>$1.87/SF", "Unit 1302<br>A1<br>$1,450<br>714 SF<br>$2.03/SF", "Unit 2101<br>A2<br>$1,490<br>752 SF<br>$1.98/SF", "Unit 2102<br>A3<br>$1,560<br>825 SF<br>$1.89/SF"], "name": "Magnolia on the Green", "mode": "markers", "type": "scatter", "marker": {"color": "#0070C0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [645, 710, 645, 760, 710, 805, 645, 760], "y": [1285, 1345, 1295, 1405, 1355, 1450, 1300, 1415], "text": ["Unit 1A<br>A1<br>$1,285<br>645 SF<br>$1.99/SF", "Unit 2A<br>A2<br>$1,345<br>710 SF<br>$1.89/SF", "Unit 3A<br>A1<br>$1,295<br>645 SF<br>$2.01/SF", "Unit 4A<br>A3<br>$1,405<br>760 SF<br>$1.85/SF", "Unit 5A<br>A2<br>$1,355<br>710 SF<br>$1.91/SF", "Unit 6A<br>A4<br>$1,450<br>805 SF<br>$1.80/SF", "Unit 7A<br>A1<br>$1,300<br>645 SF<br>$2.02/SF", "Unit 8A<br>A3<br>$1,415<br>760 SF<br>$1.86/SF"], "name": "McKinney Terrace", "mode": "markers", "type": "scatter", "marker": {"color": "#FFC000", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [678, 742, 815, 678, 742, 855, 678, 890, 815, 742], "y": [1085, 1145, 1220, 1095, 1155, 1260, 1100, 1295, 1225, 1160], "text": ["Unit 1001<br>A1<br>$1,085<br>678 SF<br>$1.60/SF", "Unit 1002<br>A2<br>$1,145<br>742 SF<br>$1.54/SF", "Unit 1003<br>A3<br>$1,220<br>815 SF<br>$1.50/SF", "Unit 2001<br>A1<br>$1,095<br>678 SF<br>$1.62/SF", "Unit 2002<br>A2<br>$1,155<br>742 SF<br>$1.56/SF", "Unit 2003<br>A4<br>$1,260<br>855 SF<br>$1.47/SF", "Unit 3001<br>A1<br>$1,100<br>678 SF<br>$1.62/SF", "Unit 3002<br>A5<br>$1,295<br>890 SF<br>$1.46/SF", "Unit 1004<br>A3<br>$1,225<br>815 SF<br>$1.50/SF", "Unit 2004<br>A2<br>$1,160<br>742 SF<br>$1.56/SF"], "name": "The Bridge at McKinney", "mode": "markers", "type": "scatter", "marker": {"color": "#7030A0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [786, 825, 786, 854, 825, 786, 854, 889], "y": [1437, 1475, 1450, 1510, 1485, 1440, 1520, 1555], "text": ["Unit A101<br>A1<br>$1,437<br>786 SF<br>$1.83/SF", "Unit A102<br>A2<br>$1,475<br>825 SF<br>$1.79/SF", "Unit A201<br>A1<br>$1,450<br>786 SF<br>$1.84/SF", "Unit A202<br>A3<br>$1,510<br>854 SF<br>$1.77/SF", "Unit B101<br>A2<br>$1,485<br>825 SF<br>$1.80/SF", "Unit B102<br>A1<br>$1,440<br>786 SF<br>$1.83/SF", "Unit B201<br>A3<br>$1,520<br>854 SF<br>$1.78/SF", "Unit B202<br>A4<br>$1,555<br>889 SF<br>$1.75/SF"], "name": "The Link at Twin Creeks", "mode": "markers", "type": "scatter", "marker": {"color": "#00B050", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [631.0, 636.2857142857143, 641.5714285714286, 646.8571428571429, 652.1428571428571, 657.4285714285714, 662.7142857142857, 668.0, 673.2857142857143, 678.5714285714286, 683.8571428571429, 689.1428571428571, 694.4285714285714, 699.7142857142857, 705.0, 710.2857142857142, 715.5714285714286, 720.8571428571429, 726.1428571428571, 731.4285714285714, 736.7142857142857, 742.0, 747.2857142857142, 752.5714285714286, 757.8571428571429, 763.1428571428571, 768.4285714285714, 773.7142857142858, 779.0, 784.2857142857142, 789.5714285714286, 794.8571428571429, 800.1428571428571, 805.4285714285714, 810.7142857142858, 816.0, 821.2857142857142, 826.5714285714286, 831.8571428571429, 837.1428571428571, 842.4285714285714, 847.7142857142858, 853.0, 858.2857142857142, 863.5714285714286, 868.8571428571429, 874.1428571428571, 879.4285714285714, 884.7142857142858, 890.0], "y": [1293.1342600682183, 1297.6155807019022, 1302.0969013355862, 1306.5782219692703, 1311.059542602954, 1315.5408632366382, 1320.0221838703221, 1324.5035045040063, 1328.9848251376902, 1333.4661457713742, 1337.947466405058, 1342.428787038742, 1346.910107672426, 1351.39142830611, 1355.872748939794, 1360.354069573478, 1364.8353902071622, 1369.316710840846, 1373.79803147453, 1378.279352108214, 1382.760672741898, 1387.2419933755818, 1391.7233140092658, 1396.20463464295, 1400.685955276634, 1405.167275910318, 1409.648596544002, 1414.129917177686, 1418.6112378113698, 1423.0925584450538, 1427.5738790787377, 1432.0551997124219, 1436.5365203461058, 1441.01784097979, 1445.499161613474, 1449.9804822471579, 1454.4618028808418, 1458.9431235145257, 1463.4244441482097, 1467.9057647818936, 1472.3870854155778, 1476.868406049262, 1481.3497266829459, 1485.8310473166298, 1490.3123679503137, 1494.7936885839977, 1499.2750092176816, 1503.7563298513655, 1508.2376504850497, 1512.7189711187336], "name": "Market Trendline", "mode": "lines", "type": "scatter", "line": {"color": "#333", "width": 2, "dash": "dash"}}], {
-        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8'},
-        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$'},
+        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8', zeroline: false},
+        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$', zeroline: false},
         plot_bgcolor: 'white',
         paper_bgcolor: 'white',
-        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center'},
-        margin: {l: 70, r: 30, t: 20, b: 80},
+        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: {size: 11}},
+        margin: {l: 70, r: 30, t: 10, b: 80},
         hovermode: 'closest',
     }, {responsive: true});
     </script>
@@ -572,8 +818,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.89</td>
             <td class="center">04/25/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">1A</td>
             <td class="center">A1</td>
             <td class="right">645</td>
@@ -581,8 +827,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.99</td>
             <td class="center">04/20/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">3A</td>
             <td class="center">A1</td>
             <td class="right">645</td>
@@ -590,8 +836,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$2.01</td>
             <td class="center">04/20/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">7A</td>
             <td class="center">A1</td>
             <td class="right">645</td>
@@ -599,8 +845,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$2.02</td>
             <td class="center">04/20/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">2A</td>
             <td class="center">A2</td>
             <td class="right">710</td>
@@ -608,8 +854,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.89</td>
             <td class="center">04/20/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">5A</td>
             <td class="center">A2</td>
             <td class="right">710</td>
@@ -617,8 +863,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.91</td>
             <td class="center">04/20/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">4A</td>
             <td class="center">A3</td>
             <td class="right">760</td>
@@ -626,8 +872,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.85</td>
             <td class="center">04/20/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">8A</td>
             <td class="center">A3</td>
             <td class="right">760</td>
@@ -635,8 +881,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.86</td>
             <td class="center">04/20/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">6A</td>
             <td class="center">A4</td>
             <td class="right">805</td>
@@ -812,22 +1058,22 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </div>
 
 <div class="section">
-    <h2>2BR</h2>
+    <h2>2-Bedrooms &mdash; Market Comparison</h2>
     <div class="sub-metrics">
-        <div class="sub-metric"><div class="val">43</div><div class="lbl">Units</div></div>
-        <div class="sub-metric"><div class="val">$1,845</div><div class="lbl">Avg Rent</div></div>
-        <div class="sub-metric"><div class="val">$1.69</div><div class="lbl">Avg PSF</div></div>
-        <div class="sub-metric"><div class="val">1,095</div><div class="lbl">Avg Sq Ft</div></div>
+        <div class="sub-metric"><div class="val">43</div><div class="lbl">Available Units</div></div>
+        <div class="sub-metric"><div class="val">$1,845</div><div class="lbl">Avg Asking Rent</div></div>
+        <div class="sub-metric"><div class="val">$1.69</div><div class="lbl">Avg Price / SF</div></div>
+        <div class="sub-metric"><div class="val">1,095</div><div class="lbl">Avg Unit Size</div></div>
     </div>
     <div id="chart_2br" class="chart-container"></div>
     <script>
     Plotly.newPlot('chart_2br', [{"x": [1035, 1095, 1035, 1150, 1095, 1150], "y": [1774, 1845, 1790, 1920, 1855, 1935], "text": ["Unit 113<br>B1<br>$1,774<br>1035 SF<br>$1.71/SF", "Unit 213<br>B2<br>$1,845<br>1095 SF<br>$1.68/SF", "Unit 313<br>B1<br>$1,790<br>1035 SF<br>$1.73/SF", "Unit 413<br>B3<br>$1,920<br>1150 SF<br>$1.67/SF", "Unit 114<br>B2<br>$1,855<br>1095 SF<br>$1.69/SF", "Unit 214<br>B3<br>$1,935<br>1150 SF<br>$1.68/SF"], "name": "Collin Square", "mode": "markers", "type": "scatter", "marker": {"color": "#00B0F0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1006, 1006, 1055, 1055, 1006, 1055], "y": [1815, 1835, 1890, 1910, 1825, 1875], "text": ["Unit 106<br>B1<br>$1,815<br>1006 SF<br>$1.80/SF", "Unit 206<br>B1<br>$1,835<br>1006 SF<br>$1.82/SF", "Unit 306<br>B2<br>$1,890<br>1055 SF<br>$1.79/SF", "Unit 406<br>B2<br>$1,910<br>1055 SF<br>$1.81/SF", "Unit 107<br>B1<br>$1,825<br>1006 SF<br>$1.81/SF", "Unit 207<br>B2<br>$1,875<br>1055 SF<br>$1.78/SF"], "name": "Davis at the Square", "mode": "markers", "type": "scatter", "marker": {"color": "#C00000", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1040, 1095, 1155, 1040, 1200, 1095, 1245], "y": [1815, 1870, 1935, 1825, 1990, 1880, 2045], "text": ["Unit A103<br>B1<br>$1,815<br>1040 SF<br>$1.75/SF", "Unit A203<br>B2<br>$1,870<br>1095 SF<br>$1.71/SF", "Unit A303<br>B3<br>$1,935<br>1155 SF<br>$1.68/SF", "Unit B103<br>B1<br>$1,825<br>1040 SF<br>$1.75/SF", "Unit B203<br>B4<br>$1,990<br>1200 SF<br>$1.66/SF", "Unit C103<br>B2<br>$1,880<br>1095 SF<br>$1.72/SF", "Unit C203<br>B5<br>$2,045<br>1245 SF<br>$1.64/SF"], "name": "Kinstead", "mode": "markers", "type": "scatter", "marker": {"color": "#FF6600", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1064, 1064, 1138, 1064, 1138, 1138], "y": [1935, 1955, 2075, 1940, 2090, 2060], "text": ["Unit 1103<br>B1<br>$1,935<br>1064 SF<br>$1.82/SF", "Unit 1203<br>B1<br>$1,955<br>1064 SF<br>$1.84/SF", "Unit 1303<br>B2<br>$2,075<br>1138 SF<br>$1.82/SF", "Unit 2103<br>B1<br>$1,940<br>1064 SF<br>$1.82/SF", "Unit 2203<br>B2<br>$2,090<br>1138 SF<br>$1.84/SF", "Unit 1104<br>B2<br>$2,060<br>1138 SF<br>$1.81/SF"], "name": "Magnolia on the Green", "mode": "markers", "type": "scatter", "marker": {"color": "#0070C0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1020, 1085, 1020, 1145, 1085, 1020], "y": [1658, 1735, 1670, 1810, 1745, 1665], "text": ["Unit 1B<br>B1<br>$1,658<br>1020 SF<br>$1.63/SF", "Unit 2B<br>B2<br>$1,735<br>1085 SF<br>$1.60/SF", "Unit 3B<br>B1<br>$1,670<br>1020 SF<br>$1.64/SF", "Unit 4B<br>B3<br>$1,810<br>1145 SF<br>$1.58/SF", "Unit 5B<br>B2<br>$1,745<br>1085 SF<br>$1.61/SF", "Unit 6B<br>B1<br>$1,665<br>1020 SF<br>$1.63/SF"], "name": "McKinney Terrace", "mode": "markers", "type": "scatter", "marker": {"color": "#FFC000", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1045, 1120, 1045, 1185, 1120, 1045], "y": [1550, 1645, 1565, 1720, 1660, 1555], "text": ["Unit 1005<br>B1<br>$1,550<br>1045 SF<br>$1.48/SF", "Unit 1006<br>B2<br>$1,645<br>1120 SF<br>$1.47/SF", "Unit 2005<br>B1<br>$1,565<br>1045 SF<br>$1.50/SF", "Unit 2006<br>B3<br>$1,720<br>1185 SF<br>$1.45/SF", "Unit 3005<br>B2<br>$1,660<br>1120 SF<br>$1.48/SF", "Unit 3006<br>B1<br>$1,555<br>1045 SF<br>$1.49/SF"], "name": "The Bridge at McKinney", "mode": "markers", "type": "scatter", "marker": {"color": "#7030A0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1120, 1180, 1120, 1215, 1180, 1120], "y": [1895, 1965, 1910, 2025, 1975, 1920], "text": ["Unit A103<br>B1<br>$1,895<br>1120 SF<br>$1.69/SF", "Unit A203<br>B2<br>$1,965<br>1180 SF<br>$1.67/SF", "Unit B103<br>B1<br>$1,910<br>1120 SF<br>$1.71/SF", "Unit B203<br>B3<br>$2,025<br>1215 SF<br>$1.67/SF", "Unit C103<br>B2<br>$1,975<br>1180 SF<br>$1.67/SF", "Unit C203<br>B1<br>$1,920<br>1120 SF<br>$1.71/SF"], "name": "The Link at Twin Creeks", "mode": "markers", "type": "scatter", "marker": {"color": "#00B050", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1006.0, 1010.8775510204082, 1015.7551020408164, 1020.6326530612245, 1025.5102040816328, 1030.3877551020407, 1035.265306122449, 1040.142857142857, 1045.0204081632653, 1049.8979591836735, 1054.7755102040817, 1059.6530612244899, 1064.530612244898, 1069.408163265306, 1074.2857142857142, 1079.1632653061224, 1084.0408163265306, 1088.9183673469388, 1093.795918367347, 1098.6734693877552, 1103.5510204081634, 1108.4285714285713, 1113.3061224489795, 1118.1836734693877, 1123.061224489796, 1127.938775510204, 1132.8163265306123, 1137.6938775510205, 1142.5714285714287, 1147.4489795918366, 1152.3265306122448, 1157.204081632653, 1162.0816326530612, 1166.9591836734694, 1171.8367346938776, 1176.7142857142858, 1181.591836734694, 1186.4693877551022, 1191.3469387755101, 1196.2244897959183, 1201.1020408163265, 1205.9795918367347, 1210.857142857143, 1215.734693877551, 1220.6122448979593, 1225.4897959183672, 1230.3673469387754, 1235.2448979591836, 1240.1224489795918, 1245.0], "y": [1733.7300631712383, 1739.843371577895, 1745.9566799845518, 1752.0699883912082, 1758.183296797865, 1764.2966052045217, 1770.4099136111784, 1776.523222017835, 1782.6365304244919, 1788.7498388311485, 1794.8631472378052, 1800.976455644462, 1807.0897640511187, 1813.203072457775, 1819.316380864432, 1825.4296892710886, 1831.5429976777452, 1837.656306084402, 1843.7696144910587, 1849.8829228977154, 1855.9962313043723, 1862.1095397110287, 1868.2228481176853, 1874.3361565243422, 1880.4494649309988, 1886.5627733376555, 1892.6760817443123, 1898.789390150969, 1904.9026985576256, 1911.016006964282, 1917.129315370939, 1923.2426237775956, 1929.3559321842524, 1935.469240590909, 1941.5825489975657, 1947.6958574042226, 1953.8091658108792, 1959.9224742175359, 1966.0357826241923, 1972.1490910308491, 1978.2623994375058, 1984.3757078441627, 1990.4890162508193, 1996.602324657476, 2002.7156330641328, 2008.8289414707892, 2014.9422498774459, 2021.0555582841025, 2027.1688666907594, 2033.282175097416], "name": "Market Trendline", "mode": "lines", "type": "scatter", "line": {"color": "#333", "width": 2, "dash": "dash"}}], {
-        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8'},
-        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$'},
+        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8', zeroline: false},
+        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$', zeroline: false},
         plot_bgcolor: 'white',
         paper_bgcolor: 'white',
-        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center'},
-        margin: {l: 70, r: 30, t: 20, b: 80},
+        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: {size: 11}},
+        margin: {l: 70, r: 30, t: 10, b: 80},
         hovermode: 'closest',
     }, {responsive: true});
     </script>
@@ -1063,8 +1309,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.81</td>
             <td class="center">05/01/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">1B</td>
             <td class="center">B1</td>
             <td class="right">1,020</td>
@@ -1072,8 +1318,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.63</td>
             <td class="center">05/01/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">3B</td>
             <td class="center">B1</td>
             <td class="right">1,020</td>
@@ -1081,8 +1327,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.64</td>
             <td class="center">05/01/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">6B</td>
             <td class="center">B1</td>
             <td class="right">1,020</td>
@@ -1090,8 +1336,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.63</td>
             <td class="center">05/01/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">2B</td>
             <td class="center">B2</td>
             <td class="right">1,085</td>
@@ -1099,8 +1345,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.60</td>
             <td class="center">05/01/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">5B</td>
             <td class="center">B2</td>
             <td class="right">1,085</td>
@@ -1108,8 +1354,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.61</td>
             <td class="center">05/01/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">4B</td>
             <td class="center">B3</td>
             <td class="right">1,145</td>
@@ -1231,22 +1477,22 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </div>
 
 <div class="section">
-    <h2>3BR</h2>
+    <h2>3-Bedrooms &mdash; Market Comparison</h2>
     <div class="sub-metrics">
-        <div class="sub-metric"><div class="val">13</div><div class="lbl">Units</div></div>
-        <div class="sub-metric"><div class="val">$2,428</div><div class="lbl">Avg Rent</div></div>
-        <div class="sub-metric"><div class="val">$1.73</div><div class="lbl">Avg PSF</div></div>
-        <div class="sub-metric"><div class="val">1,402</div><div class="lbl">Avg Sq Ft</div></div>
+        <div class="sub-metric"><div class="val">13</div><div class="lbl">Available Units</div></div>
+        <div class="sub-metric"><div class="val">$2,428</div><div class="lbl">Avg Asking Rent</div></div>
+        <div class="sub-metric"><div class="val">$1.73</div><div class="lbl">Avg Price / SF</div></div>
+        <div class="sub-metric"><div class="val">1,402</div><div class="lbl">Avg Unit Size</div></div>
     </div>
     <div id="chart_3br" class="chart-container"></div>
     <script>
     Plotly.newPlot('chart_3br', [{"x": [1380, 1380, 1505], "y": [2279, 2310, 2684], "text": ["Unit 115<br>C1<br>$2,279<br>1380 SF<br>$1.65/SF", "Unit 215<br>C1<br>$2,310<br>1380 SF<br>$1.67/SF", "Unit 315<br>C2<br>$2,684<br>1505 SF<br>$1.78/SF"], "name": "Collin Square", "mode": "markers", "type": "scatter", "marker": {"color": "#00B0F0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1420, 1543], "y": [2385, 2577], "text": ["Unit A104<br>C1<br>$2,385<br>1420 SF<br>$1.68/SF", "Unit B104<br>C2<br>$2,577<br>1543 SF<br>$1.67/SF"], "name": "Kinstead", "mode": "markers", "type": "scatter", "marker": {"color": "#FF6600", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1310, 1310, 1415], "y": [1999, 2025, 2472], "text": ["Unit 1C<br>C1<br>$1,999<br>1310 SF<br>$1.53/SF", "Unit 2C<br>C1<br>$2,025<br>1310 SF<br>$1.55/SF", "Unit 3C<br>C2<br>$2,472<br>1415 SF<br>$1.75/SF"], "name": "McKinney Terrace", "mode": "markers", "type": "scatter", "marker": {"color": "#FFC000", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1425, 1425], "y": [2751, 2785], "text": ["Unit 1007<br>C1<br>$2,751<br>1425 SF<br>$1.93/SF", "Unit 2007<br>C1<br>$2,785<br>1425 SF<br>$1.95/SF"], "name": "The Bridge at McKinney", "mode": "markers", "type": "scatter", "marker": {"color": "#7030A0", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1350, 1350, 1416], "y": [2380, 2410, 2509], "text": ["Unit A104<br>C1<br>$2,380<br>1350 SF<br>$1.76/SF", "Unit B104<br>C1<br>$2,410<br>1350 SF<br>$1.79/SF", "Unit C104<br>C2<br>$2,509<br>1416 SF<br>$1.77/SF"], "name": "The Link at Twin Creeks", "mode": "markers", "type": "scatter", "marker": {"color": "#00B050", "size": 9}, "hovertemplate": "%{text}<extra></extra>"}, {"x": [1310.0, 1314.7551020408164, 1319.5102040816328, 1324.265306122449, 1329.0204081632653, 1333.7755102040817, 1338.530612244898, 1343.2857142857142, 1348.0408163265306, 1352.795918367347, 1357.5510204081634, 1362.3061224489795, 1367.061224489796, 1371.8163265306123, 1376.5714285714287, 1381.3265306122448, 1386.0816326530612, 1390.8367346938776, 1395.591836734694, 1400.3469387755101, 1405.1020408163265, 1409.857142857143, 1414.6122448979593, 1419.3673469387754, 1424.1224489795918, 1428.8775510204082, 1433.6326530612246, 1438.3877551020407, 1443.142857142857, 1447.8979591836735, 1452.6530612244899, 1457.408163265306, 1462.1632653061224, 1466.9183673469388, 1471.6734693877552, 1476.4285714285713, 1481.1836734693877, 1485.938775510204, 1490.6938775510205, 1495.4489795918366, 1500.204081632653, 1504.9591836734694, 1509.7142857142858, 1514.469387755102, 1519.2244897959183, 1523.9795918367347, 1528.734693877551, 1533.4897959183672, 1538.2448979591836, 1543.0], "y": [2179.3969521788754, 2192.2220042094823, 2205.047056240089, 2217.8721082706957, 2230.697160301303, 2243.52221233191, 2256.3472643625173, 2269.1723163931238, 2281.9973684237307, 2294.8224204543376, 2307.647472484945, 2320.4725245155514, 2333.2975765461583, 2346.1226285767657, 2358.9476806073726, 2371.772732637979, 2384.597784668586, 2397.4228366991933, 2410.2478887298003, 2423.0729407604067, 2435.897992791014, 2448.723044821621, 2461.548096852228, 2474.373148882835, 2487.1982009134417, 2500.0232529440486, 2512.848304974656, 2525.6733570052625, 2538.4984090358694, 2551.3234610664763, 2564.1485130970837, 2576.97356512769, 2589.798617158297, 2602.6236691889044, 2615.4487212195113, 2628.2737732501178, 2641.098825280725, 2653.923877311332, 2666.748929341939, 2679.5739813725454, 2692.3990334031528, 2705.2240854337597, 2718.0491374643666, 2730.8741894949735, 2743.69924152558, 2756.5242935561873, 2769.3493455867947, 2782.174397617401, 2794.9994496480085, 2807.824501678615], "name": "Market Trendline", "mode": "lines", "type": "scatter", "line": {"color": "#333", "width": 2, "dash": "dash"}}], {
-        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8'},
-        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$'},
+        xaxis: {title: 'Square Feet', gridcolor: '#E8E8E8', zeroline: false},
+        yaxis: {title: 'Rental Rates ($)', gridcolor: '#E8E8E8', tickprefix: '$', zeroline: false},
         plot_bgcolor: 'white',
         paper_bgcolor: 'white',
-        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center'},
-        margin: {l: 70, r: 30, t: 20, b: 80},
+        legend: {orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: {size: 11}},
+        margin: {l: 70, r: 30, t: 10, b: 80},
         hovermode: 'closest',
     }, {responsive: true});
     </script>
@@ -1302,8 +1548,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.67</td>
             <td class="center">05/15/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">1C</td>
             <td class="center">C1</td>
             <td class="right">1,310</td>
@@ -1311,8 +1557,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.53</td>
             <td class="center">05/15/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">2C</td>
             <td class="center">C1</td>
             <td class="right">1,310</td>
@@ -1320,8 +1566,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <td class="right">$1.55</td>
             <td class="center">05/15/2026</td>
             <td></td>
-        </tr><tr>
-            <td style="color:#FFC000;font-weight:500">McKinney Terrace</td>
+        </tr><tr class="subject-row">
+            <td style="color:#FFC000;font-weight:700">McKinney Terrace</td>
             <td class="center">3C</td>
             <td class="center">C2</td>
             <td class="right">1,415</td>
@@ -1380,7 +1626,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </div>
 
 <div class="footer">
-    DFW Multifamily Market Survey &mdash; McKinney / Allen Area Comps &mdash; April 08, 2026 at 07:31 PM
+    <strong>Buchanan Street Partners</strong> &nbsp;&mdash;&nbsp; McKinney Terrace Market Survey &nbsp;&mdash;&nbsp; April 08, 2026 at 07:58 PM
 </div>
 
 </div>
