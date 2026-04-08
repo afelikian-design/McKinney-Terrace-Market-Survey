@@ -4,15 +4,15 @@ Production-grade scraper + dashboard + Excel export tool for Dallas-Fort Worth a
 
 ## Target Properties
 
-| # | Property | Location | Platform |
-|---|----------|----------|----------|
-| 1 | Davis at the Square | McKinney, TX | Custom / Willow Bridge |
-| 2 | Magnolia on the Green | Allen, TX | RENTCafe / Yardi |
-| 3 | The Link at Twin Creeks | Allen, TX | Greystar |
-| 4 | The Bridge at McKinney | McKinney, TX | RENTCafe |
-| 5 | Kinstead | McKinney, TX | RENTCafe / CBRE |
-| 6 | Collin Square | McKinney, TX | ZRS Management |
-| 7 | McKinney Terrace | McKinney, TX | Greystar |
+| # | Property | Location | Platform | Management |
+|---|----------|----------|----------|------------|
+| 1 | Davis at the Square | McKinney, TX | **Entrata** (ProspectPortal) | Willow Bridge Property Co. |
+| 2 | Magnolia on the Green | Allen, TX | **Yardi / RENTCafe** | Weidner Apartment Homes |
+| 3 | The Link at Twin Creeks | Allen, TX | **RealPage** (LOFT Living) | Greystar |
+| 4 | The Bridge at McKinney | McKinney, TX | **Yardi / RENTCafe** | Asset Living / Pontis |
+| 5 | Kinstead | McKinney, TX | **Yardi / RENTCafe** (securecafe.com) | TI Communities / CBRE |
+| 6 | Collin Square | McKinney, TX | **Unknown / Custom** | ZRS Management |
+| 7 | McKinney Terrace | McKinney, TX | **RealPage** | Greystar |
 
 ## Quick Start
 
@@ -96,15 +96,15 @@ Each property scraper:
 
 ### Data Sources per Property
 
-| Property | Primary Source | Fallback |
-|----------|---------------|----------|
-| Davis at the Square | API interception | HTML floor plan cards |
-| Magnolia on the Green | RENTCafe API | RENTCafe listing page |
-| The Link at Twin Creeks | API interception | HTML parsing |
-| The Bridge at McKinney | RENTCafe API | RENTCafe listing page |
-| Kinstead | RENTCafe API | RENTCafe listing page |
-| Collin Square | API interception | HTML parsing |
-| McKinney Terrace | API interception | HTML parsing |
+| Property | Platform | Primary Source | Fallback |
+|----------|----------|---------------|----------|
+| Davis at the Square | Entrata | Entrata API / embedded JSON | HTML floorplan cards |
+| Magnolia on the Green | Yardi/RENTCafe | RENTCafe API interception | RENTCafe listing page |
+| The Link at Twin Creeks | RealPage | API interception | Greystar listing page |
+| The Bridge at McKinney | Yardi/RENTCafe | RENTCafe API interception | RENTCafe listing page |
+| Kinstead | Yardi/RENTCafe | RENTCafe API / securecafe | RENTCafe listing page |
+| Collin Square | Custom | API interception | Per-bedroom page scraping |
+| McKinney Terrace | RealPage | API interception | Greystar listing + per-FP pages |
 
 ## Normalization Rules
 
