@@ -1,0 +1,8 @@
+property_name,is_subject,floorplan_name,unit_number,bedrooms,bathrooms,sqft,asking_rent,base_rent,date_available,concession,psf,property_url,scraped_at,no_data
+McKinney Terrace,True,,,,,,,,,,,https://mckinneyterrace.com/,2026-04-10T17:06:34.594278+00:00,True
+Davis at the Square,False,,,,,,,,,,,https://davisatthesquare.com/,2026-04-10T17:06:34.594278+00:00,True
+Magnolia on the Green,False,,,,,,,,,,,https://www.magnoliaonthegreen.com/,2026-04-10T17:06:34.594278+00:00,True
+The Links at Twin Creeks,False,,,,,,,,,,,https://livethelinkapts.com/,2026-04-10T17:06:34.594278+00:00,True
+The Bridge at McKinney,False,,,,,,,,,,,https://www.thebridgeatmckinney.com/,2026-04-10T17:06:34.594278+00:00,True
+Kinstead,False,,,,,,,,,,,https://www.kinsteadmckinney.com/,2026-04-10T17:06:34.594278+00:00,True
+Collin Square,False,,,,,,,,,,,https://www.collinsquareapts.com/,2026-04-10T17:06:34.594278+00:00,True

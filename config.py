@@ -85,3 +85,75 @@ UNIT_TYPES = ["Studios", "1BR", "2BR", "3BR"]
 # Excel formatting
 HEADER_FILL_COLOR = "1F4E79"
 HEADER_FONT_COLOR = "FFFFFF"
+
+# -----------------------------------------------------------------------------
+# Shared market-survey configuration (used by scrape_market.py, build_dashboard.py,
+# and build_excel.py). These match the exact specification for the market survey
+# pipeline and are independent of the legacy PropertyConfig above.
+# -----------------------------------------------------------------------------
+
+# The canonical list of properties scraped by scrape_market.py.
+MARKET_PROPERTIES = [
+    {
+        "name": "McKinney Terrace",
+        "url": "https://mckinneyterrace.com/",
+        "is_subject": True,
+    },
+    {
+        "name": "Davis at the Square",
+        "url": "https://davisatthesquare.com/",
+        "is_subject": False,
+    },
+    {
+        "name": "Magnolia on the Green",
+        "url": "https://www.magnoliaonthegreen.com/",
+        "is_subject": False,
+    },
+    {
+        "name": "The Links at Twin Creeks",
+        "url": "https://livethelinkapts.com/",
+        "is_subject": False,
+    },
+    {
+        "name": "The Bridge at McKinney",
+        "url": "https://www.thebridgeatmckinney.com/",
+        "is_subject": False,
+    },
+    {
+        "name": "Kinstead",
+        "url": "https://www.kinsteadmckinney.com/",
+        "is_subject": False,
+    },
+    {
+        "name": "Collin Square",
+        "url": "https://www.collinsquareapts.com/",
+        "is_subject": False,
+    },
+]
+
+SUBJECT_PROPERTY = "McKinney Terrace"
+
+# Consistent property colors used across the HTML dashboard and Excel workbook.
+PROPERTY_COLORS = {
+    "McKinney Terrace":         "#C0392B",  # red — subject property
+    "Davis at the Square":      "#2980B9",  # blue
+    "Magnolia on the Green":    "#27AE60",  # green
+    "The Links at Twin Creeks": "#8E44AD",  # purple
+    "The Bridge at McKinney":   "#E67E22",  # orange
+    "Kinstead":                 "#16A085",  # teal
+    "Collin Square":            "#2C3E50",  # dark navy
+}
+
+# Bedroom-type display settings used by the dashboard and the Excel report.
+BEDROOM_SECTIONS = [
+    {"bedrooms": 0, "label": "Studios",        "section_title": "Studios"},
+    {"bedrooms": 1, "label": "One-Bedrooms",   "section_title": "One-Bedrooms"},
+    {"bedrooms": 2, "label": "Two-Bedrooms",   "section_title": "Two-Bedrooms"},
+    {"bedrooms": 3, "label": "Three-Bedrooms", "section_title": "Three-Bedrooms"},
+]
+
+# Brand palette
+NAVY = "#1B2A4A"
+NAVY_HEX = "1B2A4A"  # openpyxl requires hex without the leading #
+LIGHT_GRAY_HEX = "F2F2F2"
+WHITE_HEX = "FFFFFF"
