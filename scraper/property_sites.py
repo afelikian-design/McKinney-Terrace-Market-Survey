@@ -1,0 +1,335 @@
+"""Scrape data directly from each property's own website.
+
+Fallback path for when apartments.com is bot-blocked. Every property site is
+different, so this module combines a handful of heuristic extractors that
+cover the most common platforms (RentCafe / Yardi, Entrata, plus a generic
+WordPress/Elementor fallback).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+import sys
+import traceback
+from dataclasses import dataclass
+from typing import Any
+from urllib.parse import urljoin
+
+from playwright.async_api import Page, TimeoutError as PWTimeout
+
+
+@dataclass
+class PropertySiteSpec:
+    name: str
+    home_url: str
+    # Optional direct floorplan page — skips the auto-discovery step.
+    floorplans_url: str | None = None
+
+
+# Manually curated — add per-property overrides as you learn them.
+PROPERTY_SITES: dict[str, PropertySiteSpec] = {
+    "McKinney Terrace": PropertySiteSpec(
+        name="McKinney Terrace",
+        home_url="https://mckinneyterrace.com/",
+    ),
+    "The Bridge at McKinney": PropertySiteSpec(
+        name="The Bridge at McKinney",
+        home_url="https://www.thebridgeatmckinney.com/",
+    ),
+    "Kinstead": PropertySiteSpec(
+        name="Kinstead",
+        home_url="https://www.kinsteadmckinney.com/",
+    ),
+    "Collin Square": PropertySiteSpec(
+        name="Collin Square",
+        home_url="https://www.collinsquareapts.com/",
+    ),
+    "Gray Branch Apartments": PropertySiteSpec(
+        name="Gray Branch Apartments",
+        home_url="https://livebh.com/apartments/gray-branch-apartments/",
+    ),
+    "Bexley Lake Forest": PropertySiteSpec(
+        name="Bexley Lake Forest",
+        home_url="https://www.bexleylakeforest.com/",
+    ),
+    "McKinney Village": PropertySiteSpec(
+        name="McKinney Village",
+        home_url="https://www.mckinneyvillageapts.com/",
+    ),
+    "The Dalton": PropertySiteSpec(
+        name="The Dalton",
+        home_url="https://daltonapartmentsmckinney.com/",
+    ),
+}
+
+
+SPECIALS_KEYWORDS = [
+    "weeks free",
+    "week free",
+    "months free",
+    "month free",
+    "special",
+    "save",
+    "waived",
+    "look and lease",
+    "reduced",
+    "concession",
+]
+
+
+async def _safe_goto(page: Page, url: str, *, timeout: int = 60_000) -> bool:
+    try:
+        await page.goto(url, wait_until="domcontentloaded", timeout=timeout)
+        try:
+            await page.wait_for_load_state("networkidle", timeout=12_000)
+        except PWTimeout:
+            pass
+        return True
+    except Exception as exc:  # noqa: BLE001
+        print(f"    ! nav failed: {exc}", file=sys.stderr)
+        return False
+
+
+async def _find_floorplans_url(page: Page, home_url: str) -> str | None:
+    """Scan the home page for a link labelled Floorplans / Availability."""
+    candidates = await page.evaluate(
+        """
+        () => {
+          const patterns = [
+            /floor\\s*plans?/i,
+            /availability/i,
+            /apartments?/i,
+            /current\\s*openings?/i,
+            /pricing/i,
+            /lease/i,
+          ];
+          const anchors = Array.from(document.querySelectorAll('a[href]'));
+          const hits = [];
+          for (const a of anchors) {
+            const text = (a.innerText || '').trim();
+            const href = a.getAttribute('href') || '';
+            for (const p of patterns) {
+              if (p.test(text) || p.test(href)) {
+                hits.push({ text, href });
+                break;
+              }
+            }
+          }
+          return hits;
+        }
+        """
+    )
+    if not candidates:
+        return None
+    # Prefer links whose URL mentions floorplans/availability (more specific).
+    priority = (
+        "floorplan",
+        "floor-plan",
+        "availability",
+        "current-openings",
+        "apartments",
+        "pricing",
+    )
+    for keyword in priority:
+        for c in candidates:
+            href = c.get("href") or ""
+            if keyword in href.lower():
+                return urljoin(home_url, href)
+    # Fall back to first candidate with a non-fragment href.
+    for c in candidates:
+        href = c.get("href") or ""
+        if href and not href.startswith("#"):
+            return urljoin(home_url, href)
+    return None
+
+
+async def _extract_specials(page: Page) -> str | None:
+    try:
+        body = await page.inner_text("body")
+    except Exception:  # noqa: BLE001
+        return None
+    for line in body.splitlines():
+        candidate = line.strip()
+        if not candidate or len(candidate) > 240:
+            continue
+        lower = candidate.lower()
+        if any(kw in lower for kw in SPECIALS_KEYWORDS):
+            return " ".join(candidate.split())
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Platform-specific extractors
+# ---------------------------------------------------------------------------
+
+
+_RENTCAFE_HINTS = (
+    "rentcafe.com",
+    "/current-openings",
+    "wp-content/plugins/rentcafe",
+)
+
+
+async def _detect_platform(page: Page) -> str:
+    """Return 'rentcafe' | 'entrata' | 'knock' | 'iframe' | 'generic'."""
+    try:
+        html = await page.content()
+    except Exception:  # noqa: BLE001
+        return "generic"
+    lower = html.lower()
+    if any(h in lower for h in _RENTCAFE_HINTS):
+        return "rentcafe"
+    if "entrata.com" in lower or "residentportal" in lower:
+        return "entrata"
+    if "knock" in lower and "knockcrm" in lower:
+        return "knock"
+    if "<iframe" in lower:
+        return "iframe"
+    return "generic"
+
+
+async def _extract_units_generic(page: Page) -> list[dict[str, Any]]:
+    """Heuristic extractor: find floorplan-like cards anywhere on the page."""
+    script = r"""
+    () => {
+      const clean = (s) => (s || '').replace(/\s+/g, ' ').trim();
+      const intNum = (s) => {
+        if (!s) return null;
+        const m = String(s).replace(/,/g, '').match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : null;
+      };
+      const extractRent = (s) => {
+        if (!s) return null;
+        const matches = String(s).replace(/,/g, '').match(/\$(\d{3,6})/g);
+        if (!matches) return null;
+        const vals = matches.map(m => parseInt(m.replace('$', ''), 10));
+        return Math.min(...vals);
+      };
+      const extractBeds = (s) => {
+        if (!s) return null;
+        const lower = s.toLowerCase();
+        if (lower.includes('studio') || lower.includes('efficiency')) return 0;
+        const m = lower.match(/(\d+)\s*(?:bd|bed|br)\b/);
+        return m ? parseInt(m[1], 10) : null;
+      };
+      const extractBaths = (s) => {
+        if (!s) return null;
+        const m = s.toLowerCase().match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)\b/);
+        return m ? parseFloat(m[1]) : null;
+      };
+
+      // Cast a wide net for floorplan-like containers.
+      const selectors = [
+        '[class*="floorplan" i]',
+        '[class*="floor-plan" i]',
+        '[class*="fp-card" i]',
+        '[class*="fp-item" i]',
+        '[class*="plan-card" i]',
+        '[id*="floorplan" i]',
+        '.fp-container',
+        '.floor_plan',
+      ];
+      let cards = [];
+      for (const sel of selectors) {
+        cards = cards.concat(Array.from(document.querySelectorAll(sel)));
+      }
+      cards = Array.from(new Set(cards));
+      // Keep only outermost matches to avoid counting a parent + children.
+      cards = cards.filter(
+        (n) => !cards.some((m) => m !== n && m.contains(n))
+      );
+
+      const seen = new Set();
+      const units = [];
+      for (const card of cards) {
+        const text = clean(card.innerText || '');
+        if (!text) continue;
+        const rent = extractRent(text);
+        const sqft = intNum((text.match(/(\d[\d,]*)\s*sq\.?\s*ft/i) || [])[0]);
+        if (!rent && !sqft) continue;
+        const beds = extractBeds(text);
+        const baths = extractBaths(text);
+        const planEl = card.querySelector(
+          '[class*="name" i], [class*="title" i], h2, h3, h4'
+        );
+        const planName = planEl ? clean(planEl.innerText) : null;
+        const availMatch = text.match(
+          /avail[^,.\n]*?(now|immediate|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?|[A-Z][a-z]+ \d{1,2})/i
+        );
+        const available = availMatch ? clean(availMatch[0]) : null;
+
+        const key = [planName, sqft, rent, beds, baths].join('|');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        units.push({
+          unit_number: null,
+          floorplan: planName,
+          beds, baths, sqft, rent,
+          available_date: available,
+        });
+      }
+      return units;
+    }
+    """
+    try:
+        raw_units = await page.evaluate(script)
+    except Exception as exc:  # noqa: BLE001
+        print(f"    ! generic extraction failed: {exc}", file=sys.stderr)
+        return []
+    return raw_units or []
+
+
+# ---------------------------------------------------------------------------
+# Orchestration
+# ---------------------------------------------------------------------------
+
+
+async def scrape_one(page: Page, spec: PropertySiteSpec) -> dict[str, Any]:
+    """Return {specials, units, source_url, platform, note} for one property."""
+    result: dict[str, Any] = {
+        "specials": None,
+        "units": [],
+        "source_url": None,
+        "platform": None,
+        "note": None,
+    }
+
+    if not await _safe_goto(page, spec.home_url):
+        result["note"] = f"home page not reachable: {spec.home_url}"
+        return result
+
+    result["specials"] = await _extract_specials(page)
+
+    floorplans_url = spec.floorplans_url
+    if not floorplans_url:
+        floorplans_url = await _find_floorplans_url(page, spec.home_url)
+
+    if floorplans_url:
+        print(f"    · trying floorplans page: {floorplans_url}")
+        if await _safe_goto(page, floorplans_url):
+            # Let lazy-loaded widgets render.
+            await asyncio.sleep(2.0)
+            result["source_url"] = floorplans_url
+        else:
+            result["note"] = "floorplans page did not load"
+    else:
+        # Try extracting on the home page as a last resort.
+        result["source_url"] = spec.home_url
+
+    result["platform"] = await _detect_platform(page)
+    units = await _extract_units_generic(page)
+    result["units"] = units
+
+    if not units:
+        try:
+            title = await page.title()
+            body_len = await page.evaluate("() => document.body.innerText.length")
+            result["note"] = (
+                f"0 units on property site "
+                f"(platform={result['platform']}, title={title!r}, body={body_len})"
+            )
+        except Exception:  # noqa: BLE001
+            result["note"] = "0 units on property site"
+
+    return result
