@@ -266,11 +266,10 @@ _EXTRACT_SCRIPT = r"""
     cards = cards.concat(Array.from(document.querySelectorAll(sel)));
   }
   cards = Array.from(new Set(cards));
-  // Keep only outermost matches to avoid counting a parent + children.
-  cards = cards.filter(
-    (n) => !cards.some((m) => m !== n && m.contains(n))
-  );
 
+  // Build units first, then dedupe by content signature — much more reliable
+  // than a DOM "outermost" heuristic (which wrongly collapses multiple
+  // cards nested under a common container).
   const seen = new Set();
   const units = [];
   for (const card of cards) {
@@ -294,7 +293,9 @@ _EXTRACT_SCRIPT = r"""
     );
     const available = availMatch ? clean(availMatch[0]) : null;
 
-    const key = [planName, unitNumber, sqft, rent, beds, baths].join('|');
+    // Dedupe by content, not DOM. Two cards describing the same unit
+    // will always share planName + rent + sqft.
+    const key = [planName, unitNumber, sqft, rent].join('|');
     if (seen.has(key)) continue;
     seen.add(key);
     units.push({
@@ -345,7 +346,7 @@ async def _extract_units_generic(page: Page) -> list[dict[str, Any]]:
     def _merge(units: list[dict[str, Any]]) -> None:
         for u in units:
             key = "|".join(
-                str(u.get(k)) for k in ("floorplan", "unit_number", "sqft", "rent", "beds")
+                str(u.get(k)) for k in ("floorplan", "unit_number", "sqft", "rent")
             )
             if key in seen:
                 continue
