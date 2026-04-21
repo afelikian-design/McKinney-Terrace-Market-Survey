@@ -27,9 +27,18 @@ from playwright.async_api import (
 )
 
 try:
-    from playwright_stealth import stealth_async  # type: ignore
+    # playwright-stealth 2.x API
+    from playwright_stealth import Stealth  # type: ignore
+
+    _STEALTH = Stealth()
 except ImportError:  # pragma: no cover
-    stealth_async = None
+    _STEALTH = None
+
+try:
+    # Fallback to 1.x API if 2.x isn't available
+    from playwright_stealth import stealth_async as _stealth_async_legacy  # type: ignore
+except ImportError:  # pragma: no cover
+    _stealth_async_legacy = None
 
 from property_sites import PROPERTY_SITES, scrape_one as scrape_property_site
 
