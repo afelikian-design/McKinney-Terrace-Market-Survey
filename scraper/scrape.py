@@ -185,17 +185,59 @@ async def _new_context(browser: Browser) -> BrowserContext:
     return context
 
 
-async def _safe_goto(page: Page, url: str, *, timeout: int = 45_000) -> bool:
+async def _safe_goto(page: Page, url: str, *, timeout: int = 60_000) -> bool:
     try:
         await page.goto(url, wait_until="domcontentloaded", timeout=timeout)
         try:
-            await page.wait_for_load_state("networkidle", timeout=10_000)
+            await page.wait_for_load_state("networkidle", timeout=15_000)
         except PWTimeout:
             pass
         return True
     except Exception as exc:  # noqa: BLE001
         print(f"  ! navigation failed: {exc}", file=sys.stderr)
         return False
+
+
+async def _wait_for_pricing(page: Page) -> None:
+    """Wait for apartments.com's lazy-loaded pricing UI to render."""
+    selectors = [
+        ".pricingGridItem",
+        ".mortar-wrapper",
+        ".availabilityTable",
+        "[data-tab-content-id]",
+        ".priceGridModelWrapper",
+        "[class*='pricing' i]",
+        "[class*='floorplan' i]",
+    ]
+    for selector in selectors:
+        try:
+            await page.wait_for_selector(selector, timeout=8_000, state="attached")
+            break
+        except PWTimeout:
+            continue
+
+
+async def _scroll_page(page: Page) -> None:
+    """Scroll top→bottom→top to force lazy-loaded modules to render."""
+    try:
+        await page.evaluate(
+            """
+            async () => {
+              const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+              const totalHeight = document.body.scrollHeight;
+              let y = 0;
+              while (y < totalHeight) {
+                window.scrollTo(0, y);
+                await sleep(250);
+                y += 600;
+              }
+              window.scrollTo(0, 0);
+              await sleep(500);
+            }
+            """
+        )
+    except Exception:  # noqa: BLE001
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -257,7 +299,11 @@ async def _click_show_all(page: Page) -> None:
 
 async def _extract_units_apartments(page: Page) -> list[dict[str, Any]]:
     """Pull every available unit visible on an Apartments.com listing page."""
+    await _wait_for_pricing(page)
+    await _scroll_page(page)
     await _click_show_all(page)
+    await _scroll_page(page)
+    await asyncio.sleep(1.0)
 
     # JS extraction is much more robust than DOM-level python selectors here
     # because Apartments.com uses a mix of table- and card-based layouts.
@@ -601,7 +647,12 @@ async def scrape_property(browser: Browser, prop: PropertySpec) -> dict[str, Any
         units = await _extract_units_apartments(page)
 
         if not units:
-            print("  · 0 units on apartments.com — trying RentCafe fallback")
+            try:
+                title = await page.title()
+                body_len = await page.evaluate("() => document.body.innerText.length")
+                print(f"  · 0 units on apartments.com (title={title!r}, body_chars={body_len}) — trying RentCafe fallback")
+            except Exception:  # noqa: BLE001
+                print("  · 0 units on apartments.com — trying RentCafe fallback")
             fallback = await _rentcafe_fallback(page, prop)
             if fallback:
                 result["source"] = "rentcafe"
@@ -639,7 +690,7 @@ async def main() -> int:
         "properties": properties,
     }
     out_path.write_text(json.dumps(payload, indent=2))
-    print(f"\nWrote {out_path.relative_to(Path.cwd())} with {len(properties)} properties")
+    print(f"\nWrote {out_path} with {len(properties)} properties")
     return 0
 
 
