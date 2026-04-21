@@ -1,0 +1,7 @@
+[build]
+  base = "dashboard"
+  command = "cp ../data/data.json public/data.json && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"

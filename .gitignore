@@ -1,3 +1,11 @@
 __pycache__/
 *.pyc
 output/*.xlsx
+
+# Dashboard
+dashboard/node_modules
+dashboard/dist
+dashboard/public/data.json
+dashboard/.env
+dashboard/.env.local
+
