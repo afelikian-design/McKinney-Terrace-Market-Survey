@@ -1,4 +1,85 @@
 {
-  "last_updated": null,
-  "properties": []
+  "last_updated": "2026-04-21T21:21:15Z",
+  "properties": [
+    {
+      "name": "McKinney Terrace",
+      "address": "1703 Rockhill Road, McKinney, TX 75069",
+      "is_subject": true,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": null
+    },
+    {
+      "name": "The Bridge at McKinney",
+      "address": "McKinney, TX",
+      "is_subject": false,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": null
+    },
+    {
+      "name": "Kinstead",
+      "address": "McKinney, TX",
+      "is_subject": false,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": null
+    },
+    {
+      "name": "Collin Square",
+      "address": "McKinney, TX",
+      "is_subject": false,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": null
+    },
+    {
+      "name": "Gray Branch Apartments",
+      "address": "1760 North Ridge Road, McKinney, TX 75071",
+      "is_subject": false,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": "Failed: property not found via apartments.com search"
+    },
+    {
+      "name": "Bexley Lake Forest",
+      "address": "5201 Collin McKinney Parkway, McKinney, TX 75070",
+      "is_subject": false,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": "Failed: property not found via apartments.com search"
+    },
+    {
+      "name": "McKinney Village",
+      "address": "201 McKinney Village Parkway, McKinney, TX 75069",
+      "is_subject": false,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": "Failed: property not found via apartments.com search"
+    },
+    {
+      "name": "The Dalton",
+      "address": "3549 Medical Center Drive, McKinney, TX 75069",
+      "is_subject": false,
+      "source": "apartments.com",
+      "specials": null,
+      "total_available": 0,
+      "units": [],
+      "error": "Failed: property not found via apartments.com search"
+    }
+  ]
 }
