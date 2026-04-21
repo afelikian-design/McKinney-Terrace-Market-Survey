@@ -122,25 +122,49 @@ async def _find_floorplans_url(page: Page, home_url: str) -> str | None:
     )
     if not candidates:
         return None
-    # Prefer links whose URL mentions floorplans/availability (more specific).
-    priority = (
-        "floorplan",
-        "floor-plan",
-        "availability",
-        "current-openings",
-        "apartments",
-        "pricing",
+
+    def absolute(href: str) -> str:
+        return urljoin(home_url, href)
+
+    # Prefer index-style URLs: something that ends with /floorplans/ or
+    # /floor-plans — not a link to a specific plan like /floor-plans/dawn-109/.
+    index_patterns = (
+        "/floorplans",
+        "/floor-plans",
+        "/floor_plans",
+        "/availability",
+        "/current-openings",
     )
-    for keyword in priority:
+    indexed: list[tuple[int, str]] = []
+    for c in candidates:
+        href = (c.get("href") or "").lower()
+        if not href or href.startswith("#"):
+            continue
+        for pat in index_patterns:
+            if pat in href:
+                # Score: shorter URLs are more likely to be the index page.
+                # Penalise trailing path segments past the keyword.
+                idx = href.find(pat)
+                suffix = href[idx + len(pat):].strip("/")
+                extra_segments = suffix.count("/") + (1 if suffix else 0)
+                indexed.append((extra_segments, absolute(c.get("href") or "")))
+                break
+    if indexed:
+        indexed.sort(key=lambda t: t[0])
+        return indexed[0][1]
+
+    # Secondary priority keywords (no "index" preference available).
+    for keyword in ("apartments", "pricing"):
         for c in candidates:
             href = c.get("href") or ""
             if keyword in href.lower():
-                return urljoin(home_url, href)
+                return absolute(href)
+
     # Fall back to first candidate with a non-fragment href.
     for c in candidates:
         href = c.get("href") or ""
         if href and not href.startswith("#"):
-            return urljoin(home_url, href)
+            return absolute(href)
     return None
 
 
@@ -189,95 +213,159 @@ async def _detect_platform(page: Page) -> str:
     return "generic"
 
 
-async def _extract_units_generic(page: Page) -> list[dict[str, Any]]:
-    """Heuristic extractor: find floorplan-like cards anywhere on the page."""
-    script = r"""
-    () => {
-      const clean = (s) => (s || '').replace(/\s+/g, ' ').trim();
-      const intNum = (s) => {
-        if (!s) return null;
-        const m = String(s).replace(/,/g, '').match(/(\d+)/);
-        return m ? parseInt(m[1], 10) : null;
-      };
-      const extractRent = (s) => {
-        if (!s) return null;
-        const matches = String(s).replace(/,/g, '').match(/\$(\d{3,6})/g);
-        if (!matches) return null;
-        const vals = matches.map(m => parseInt(m.replace('$', ''), 10));
-        return Math.min(...vals);
-      };
-      const extractBeds = (s) => {
-        if (!s) return null;
-        const lower = s.toLowerCase();
-        if (lower.includes('studio') || lower.includes('efficiency')) return 0;
-        const m = lower.match(/(\d+)\s*(?:bd|bed|br)\b/);
-        return m ? parseInt(m[1], 10) : null;
-      };
-      const extractBaths = (s) => {
-        if (!s) return null;
-        const m = s.toLowerCase().match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)\b/);
-        return m ? parseFloat(m[1]) : null;
-      };
+_EXTRACT_SCRIPT = r"""
+() => {
+  const clean = (s) => (s || '').replace(/\s+/g, ' ').trim();
+  const intNum = (s) => {
+    if (!s) return null;
+    const m = String(s).replace(/,/g, '').match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+  const extractRent = (s) => {
+    if (!s) return null;
+    const matches = String(s).replace(/,/g, '').match(/\$(\d{3,6})/g);
+    if (!matches) return null;
+    const vals = matches.map(m => parseInt(m.replace('$', ''), 10));
+    return Math.min(...vals);
+  };
+  const extractBeds = (s) => {
+    if (!s) return null;
+    const lower = s.toLowerCase();
+    if (lower.includes('studio') || lower.includes('efficiency')) return 0;
+    const m = lower.match(/(\d+)\s*(?:bd|bed|br)\b/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+  const extractBaths = (s) => {
+    if (!s) return null;
+    const m = s.toLowerCase().match(/(\d+(?:\.\d+)?)\s*(?:ba|bath)\b/);
+    return m ? parseFloat(m[1]) : null;
+  };
 
-      // Cast a wide net for floorplan-like containers.
-      const selectors = [
-        '[class*="floorplan" i]',
-        '[class*="floor-plan" i]',
-        '[class*="fp-card" i]',
-        '[class*="fp-item" i]',
-        '[class*="plan-card" i]',
-        '[id*="floorplan" i]',
-        '.fp-container',
-        '.floor_plan',
-      ];
-      let cards = [];
-      for (const sel of selectors) {
-        cards = cards.concat(Array.from(document.querySelectorAll(sel)));
-      }
-      cards = Array.from(new Set(cards));
-      // Keep only outermost matches to avoid counting a parent + children.
-      cards = cards.filter(
-        (n) => !cards.some((m) => m !== n && m.contains(n))
-      );
+  const selectors = [
+    '[class*="floorplan" i]',
+    '[class*="floor-plan" i]',
+    '[class*="fp-card" i]',
+    '[class*="fp-item" i]',
+    '[class*="plan-card" i]',
+    '[class*="unit-card" i]',
+    '[class*="plan-row" i]',
+    '[data-floorplan-id]',
+    '[data-fp-id]',
+    '[id*="floorplan" i]',
+    '.fp-container',
+    '.floor_plan',
+    '.model-card',
+    '.model-item',
+    'article[class*="plan" i]',
+    'li[class*="plan" i]',
+    'tr[class*="plan" i]',
+    'tr[class*="unit" i]',
+  ];
+  let cards = [];
+  for (const sel of selectors) {
+    cards = cards.concat(Array.from(document.querySelectorAll(sel)));
+  }
+  cards = Array.from(new Set(cards));
+  // Keep only outermost matches to avoid counting a parent + children.
+  cards = cards.filter(
+    (n) => !cards.some((m) => m !== n && m.contains(n))
+  );
 
-      const seen = new Set();
-      const units = [];
-      for (const card of cards) {
-        const text = clean(card.innerText || '');
-        if (!text) continue;
-        const rent = extractRent(text);
-        const sqft = intNum((text.match(/(\d[\d,]*)\s*sq\.?\s*ft/i) || [])[0]);
-        if (!rent && !sqft) continue;
-        const beds = extractBeds(text);
-        const baths = extractBaths(text);
-        const planEl = card.querySelector(
-          '[class*="name" i], [class*="title" i], h2, h3, h4'
-        );
-        const planName = planEl ? clean(planEl.innerText) : null;
-        const availMatch = text.match(
-          /avail[^,.\n]*?(now|immediate|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?|[A-Z][a-z]+ \d{1,2})/i
-        );
-        const available = availMatch ? clean(availMatch[0]) : null;
+  const seen = new Set();
+  const units = [];
+  for (const card of cards) {
+    const text = clean(card.innerText || '');
+    if (!text) continue;
+    const rent = extractRent(text);
+    const sqft = intNum((text.match(/(\d[\d,]*)\s*sq\.?\s*ft/i) || [])[0]);
+    if (!rent && !sqft) continue;
+    const beds = extractBeds(text);
+    const baths = extractBaths(text);
+    const planEl = card.querySelector(
+      '[class*="name" i], [class*="title" i], h2, h3, h4'
+    );
+    const planName = planEl ? clean(planEl.innerText) : null;
+    const unitEl = card.querySelector('[class*="unit" i][class*="number" i], [data-unit]');
+    const unitNumber = unitEl
+      ? clean(unitEl.innerText || unitEl.getAttribute('data-unit') || '') || null
+      : null;
+    const availMatch = text.match(
+      /avail[^,.\n]*?(now|immediate|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?|[A-Z][a-z]+ \d{1,2})/i
+    );
+    const available = availMatch ? clean(availMatch[0]) : null;
 
-        const key = [planName, sqft, rent, beds, baths].join('|');
-        if (seen.has(key)) continue;
-        seen.add(key);
-        units.push({
-          unit_number: null,
-          floorplan: planName,
-          beds, baths, sqft, rent,
-          available_date: available,
-        });
-      }
-      return units;
-    }
-    """
+    const key = [planName, unitNumber, sqft, rent, beds, baths].join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    units.push({
+      unit_number: unitNumber,
+      floorplan: planName,
+      beds, baths, sqft, rent,
+      available_date: available,
+    });
+  }
+  return units;
+}
+"""
+
+
+async def _extract_units_from_frame(frame) -> list[dict[str, Any]]:
     try:
-        raw_units = await page.evaluate(script)
-    except Exception as exc:  # noqa: BLE001
-        print(f"    ! generic extraction failed: {exc}", file=sys.stderr)
+        raw_units = await frame.evaluate(_EXTRACT_SCRIPT)
+    except Exception:  # noqa: BLE001
         return []
     return raw_units or []
+
+
+async def _extract_units_generic(page: Page) -> list[dict[str, Any]]:
+    """Run the heuristic extractor on the page AND every nested iframe."""
+    # Scroll first so lazy widgets render.
+    try:
+        await page.evaluate(
+            """
+            async () => {
+              const sleep = ms => new Promise(r => setTimeout(r, ms));
+              let y = 0;
+              while (y < document.body.scrollHeight) {
+                window.scrollTo(0, y);
+                await sleep(150);
+                y += 600;
+              }
+              window.scrollTo(0, 0);
+              await sleep(400);
+            }
+            """
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+    collected: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def _merge(units: list[dict[str, Any]]) -> None:
+        for u in units:
+            key = "|".join(
+                str(u.get(k)) for k in ("floorplan", "unit_number", "sqft", "rent", "beds")
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            collected.append(u)
+
+    # Main frame
+    _merge(await _extract_units_from_frame(page))
+
+    # Every iframe below it. Wait briefly for iframe content to load first.
+    for frame in page.frames:
+        if frame == page.main_frame:
+            continue
+        try:
+            await frame.wait_for_load_state("domcontentloaded", timeout=4000)
+        except Exception:  # noqa: BLE001
+            pass
+        _merge(await _extract_units_from_frame(frame))
+
+    return collected
 
 
 # ---------------------------------------------------------------------------
