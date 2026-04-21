@@ -219,25 +219,37 @@ USER_AGENTS = [
 
 async def _new_context(browser: Browser) -> BrowserContext:
     user_agent = random.choice(USER_AGENTS)
-    platform = '"macOS"' if "Mac" in user_agent else '"Windows"'
+    is_mac = "Mac" in user_agent
+    is_firefox = "Firefox" in user_agent
+    is_safari = "Safari" in user_agent and "Chrome" not in user_agent
+    platform = '"macOS"' if is_mac else '"Windows"'
+
+    headers: dict[str, str] = {
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,"
+            "image/avif,image/webp,image/apng,*/*;q=0.8"
+        ),
+        "Upgrade-Insecure-Requests": "1",
+    }
+    # Only send Sec-Ch-Ua hints when the UA actually claims Chromium; Firefox
+    # and Safari never send those and the mismatch trips bot detection.
+    if not is_firefox and not is_safari:
+        chrome_version = "123" if "Chrome/123" in user_agent else "122"
+        headers["Sec-Ch-Ua"] = (
+            f'"Google Chrome";v="{chrome_version}", '
+            '"Not:A-Brand";v="8", '
+            f'"Chromium";v="{chrome_version}"'
+        )
+        headers["Sec-Ch-Ua-Mobile"] = "?0"
+        headers["Sec-Ch-Ua-Platform"] = platform
+
     context = await browser.new_context(
         user_agent=user_agent,
         viewport={"width": 1920, "height": 1080},
         locale="en-US",
         timezone_id="America/Chicago",
-        extra_http_headers={
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept": (
-                "text/html,application/xhtml+xml,application/xml;q=0.9,"
-                "image/avif,image/webp,image/apng,*/*;q=0.8"
-            ),
-            "Upgrade-Insecure-Requests": "1",
-            "Sec-Ch-Ua": (
-                '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"'
-            ),
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": platform,
-        },
+        extra_http_headers=headers,
     )
     return context
 
