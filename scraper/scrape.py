@@ -27,9 +27,18 @@ from playwright.async_api import (
 )
 
 try:
-    from playwright_stealth import stealth_async  # type: ignore
+    # playwright-stealth 2.x API
+    from playwright_stealth import Stealth  # type: ignore
+
+    _STEALTH = Stealth()
 except ImportError:  # pragma: no cover
-    stealth_async = None
+    _STEALTH = None
+
+try:
+    # Fallback to 1.x API if 2.x isn't available
+    from playwright_stealth import stealth_async as _stealth_async_legacy  # type: ignore
+except ImportError:  # pragma: no cover
+    _stealth_async_legacy = None
 
 from property_sites import PROPERTY_SITES, scrape_one as scrape_property_site
 
@@ -181,11 +190,14 @@ async def _apply_stealth(page: Page) -> None:
     await page.add_init_script(
         "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     )
-    if stealth_async is not None:
-        try:
-            await stealth_async(page)
-        except Exception as exc:  # noqa: BLE001
-            print(f"  ! stealth plugin failed: {exc}", file=sys.stderr)
+    # Prefer playwright-stealth 2.x API, fall back to 1.x if that's what's installed.
+    try:
+        if _STEALTH is not None and hasattr(_STEALTH, "apply_stealth_async"):
+            await _STEALTH.apply_stealth_async(page)
+        elif _stealth_async_legacy is not None:
+            await _stealth_async_legacy(page)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  ! stealth plugin failed: {exc}", file=sys.stderr)
 
 
 async def _warmup(page: Page) -> None:
