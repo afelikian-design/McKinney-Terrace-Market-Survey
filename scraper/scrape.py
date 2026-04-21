@@ -26,6 +26,11 @@ from playwright.async_api import (
     async_playwright,
 )
 
+try:
+    from playwright_stealth import stealth_async  # type: ignore
+except ImportError:  # pragma: no cover
+    stealth_async = None
+
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -67,7 +72,7 @@ PROPERTIES: list[PropertySpec] = [
     PropertySpec(
         name="McKinney Terrace",
         address="1703 Rockhill Road, McKinney, TX 75069",
-        url="https://www.apartments.com/mckinney-terrace-mckinney-tx/3l4wpbs/",
+        url="https://www.apartments.com/mckinney-terrace-mckinney-tx/zpd4dyy/",
         search_query=None,
         is_subject=True,
     ),
@@ -98,20 +103,20 @@ PROPERTIES: list[PropertySpec] = [
     PropertySpec(
         name="Bexley Lake Forest",
         address="5201 Collin McKinney Parkway, McKinney, TX 75070",
-        url=None,
-        search_query="Bexley Lake Forest 5201 Collin McKinney Parkway McKinney TX 75070",
+        url="https://www.apartments.com/bexley-lake-forest-mckinney-tx/xqm0pbm/",
+        search_query=None,
     ),
     PropertySpec(
         name="McKinney Village",
         address="201 McKinney Village Parkway, McKinney, TX 75069",
-        url=None,
-        search_query="McKinney Village 201 McKinney Village Parkway McKinney TX 75069",
+        url="https://www.apartments.com/mckinney-village-mckinney-tx/6nnhsrs/",
+        search_query=None,
     ),
     PropertySpec(
         name="The Dalton",
         address="3549 Medical Center Drive, McKinney, TX 75069",
-        url=None,
-        search_query="The Dalton 3549 Medical Center Drive McKinney TX 75069",
+        url="https://www.apartments.com/the-dalton-mckinney-tx/wmll30k/",
+        search_query=None,
     ),
 ]
 
@@ -174,6 +179,32 @@ async def _apply_stealth(page: Page) -> None:
     await page.add_init_script(
         "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     )
+    if stealth_async is not None:
+        try:
+            await stealth_async(page)
+        except Exception as exc:  # noqa: BLE001
+            print(f"  ! stealth plugin failed: {exc}", file=sys.stderr)
+
+
+async def _warmup(page: Page) -> None:
+    """Visit the apartments.com homepage first to collect cookies.
+
+    Apartments.com fingerprints first-hit fetches aggressively; landing on
+    a property URL cold frequently produces an empty/bot page.
+    """
+    try:
+        await page.goto(
+            "https://www.apartments.com/",
+            wait_until="domcontentloaded",
+            timeout=45_000,
+        )
+        try:
+            await page.wait_for_load_state("networkidle", timeout=8_000)
+        except PWTimeout:
+            pass
+        await asyncio.sleep(random.uniform(1.5, 2.5))
+    except Exception as exc:  # noqa: BLE001
+        print(f"  ! warmup failed: {exc}", file=sys.stderr)
 
 
 async def _new_context(browser: Browser) -> BrowserContext:
@@ -181,6 +212,20 @@ async def _new_context(browser: Browser) -> BrowserContext:
         user_agent=USER_AGENT,
         viewport={"width": 1920, "height": 1080},
         locale="en-US",
+        timezone_id="America/Chicago",
+        extra_http_headers={
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept": (
+                "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                "image/avif,image/webp,image/apng,*/*;q=0.8"
+            ),
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Ch-Ua": (
+                '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"'
+            ),
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
+        },
     )
     return context
 
@@ -621,6 +666,7 @@ async def scrape_property(browser: Browser, prop: PropertySpec) -> dict[str, Any
     context = await _new_context(browser)
     page = await context.new_page()
     await _apply_stealth(page)
+    await _warmup(page)
 
     result: dict[str, Any] = {
         "name": prop.name,
