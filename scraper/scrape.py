@@ -661,12 +661,10 @@ async def _rentcafe_fallback(page: Page, prop: PropertySpec) -> list[dict[str, A
 # ---------------------------------------------------------------------------
 
 
-async def scrape_property(browser: Browser, prop: PropertySpec) -> dict[str, Any]:
+async def scrape_property(context: BrowserContext, prop: PropertySpec) -> dict[str, Any]:
     print(f"→ {prop.name}")
-    context = await _new_context(browser)
     page = await context.new_page()
     await _apply_stealth(page)
-    await _warmup(page)
 
     result: dict[str, Any] = {
         "name": prop.name,
@@ -713,7 +711,7 @@ async def scrape_property(browser: Browser, prop: PropertySpec) -> dict[str, Any
         result["units"] = []
         result["total_available"] = 0
     finally:
-        await context.close()
+        await page.close()
 
     return result
 
@@ -724,11 +722,23 @@ async def main() -> int:
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
+        context = await _new_context(browser)
+
+        # Warm the shared context up exactly once — subsequent property
+        # fetches inherit the same cookies/fingerprint, which keeps
+        # apartments.com from flagging each request as a cold session.
+        warmup_page = await context.new_page()
+        await _apply_stealth(warmup_page)
+        await _warmup(warmup_page)
+        await warmup_page.close()
+
         properties: list[dict[str, Any]] = []
         for idx, prop in enumerate(PROPERTIES):
             if idx > 0:
-                await asyncio.sleep(random.uniform(2, 4))
-            properties.append(await scrape_property(browser, prop))
+                await asyncio.sleep(random.uniform(4, 7))
+            properties.append(await scrape_property(context, prop))
+
+        await context.close()
         await browser.close()
 
     payload = {
