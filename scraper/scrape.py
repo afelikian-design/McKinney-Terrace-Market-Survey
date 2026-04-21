@@ -31,6 +31,8 @@ try:
 except ImportError:  # pragma: no cover
     stealth_async = None
 
+from property_sites import PROPERTY_SITES, scrape_one as scrape_property_site
+
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -710,7 +712,7 @@ async def scrape_property(browser: Browser, prop: PropertySpec) -> dict[str, Any
         "name": prop.name,
         "address": prop.address,
         "is_subject": prop.is_subject,
-        "source": "apartments.com",
+        "source": "property_site",
         "specials": None,
         "total_available": 0,
         "units": [],
@@ -718,30 +720,54 @@ async def scrape_property(browser: Browser, prop: PropertySpec) -> dict[str, Any
     }
 
     try:
+        # ---- Primary: property's own website -------------------------------
+        site_spec = PROPERTY_SITES.get(prop.name)
+        if site_spec is not None:
+            site_result = await scrape_property_site(page, site_spec)
+            if site_result.get("specials"):
+                result["specials"] = site_result["specials"]
+            units = site_result.get("units") or []
+            if units:
+                result["source"] = f"property_site:{site_spec.home_url}"
+                result["units"] = units
+                result["total_available"] = len(units)
+                print(
+                    f"  ✓ {len(units)} unit(s) captured "
+                    f"({site_result.get('platform') or 'generic'} @ {site_spec.home_url})"
+                )
+                return result
+            if site_result.get("note"):
+                print(f"  · property site: {site_result['note']}")
+
+        # ---- Fallback: apartments.com --------------------------------------
         target_url = prop.url
         if not target_url and prop.search_query:
             target_url = await _find_apartments_url(page, prop.search_query)
-            if not target_url:
-                raise RuntimeError("property not found via apartments.com search")
+        if not target_url:
+            raise RuntimeError(
+                "no apartments.com URL and property site returned 0 units"
+            )
 
         if not await _safe_goto(page, target_url):
             raise RuntimeError(f"failed to load {target_url}")
 
-        result["specials"] = await _extract_specials(page)
+        if not result["specials"]:
+            result["specials"] = await _extract_specials(page)
         units = await _extract_units_apartments(page)
 
         if not units:
             try:
                 title = await page.title()
                 body_len = await page.evaluate("() => document.body.innerText.length")
-                print(f"  · 0 units on apartments.com (title={title!r}, body_chars={body_len}) — trying RentCafe fallback")
+                print(
+                    f"  · 0 units on apartments.com fallback "
+                    f"(title={title!r}, body_chars={body_len})"
+                )
             except Exception:  # noqa: BLE001
-                print("  · 0 units on apartments.com — trying RentCafe fallback")
-            fallback = await _rentcafe_fallback(page, prop)
-            if fallback:
-                result["source"] = "rentcafe"
-                units = fallback
+                print("  · 0 units on apartments.com fallback")
 
+        if units:
+            result["source"] = "apartments.com"
         result["units"] = units
         result["total_available"] = len(units)
         print(f"  ✓ {len(units)} unit(s) captured ({result['source']})")
