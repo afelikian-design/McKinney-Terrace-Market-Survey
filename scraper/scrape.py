@@ -207,9 +207,21 @@ async def _warmup(page: Page) -> None:
         print(f"  ! warmup failed: {exc}", file=sys.stderr)
 
 
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+]
+
+
 async def _new_context(browser: Browser) -> BrowserContext:
+    user_agent = random.choice(USER_AGENTS)
+    platform = '"macOS"' if "Mac" in user_agent else '"Windows"'
     context = await browser.new_context(
-        user_agent=USER_AGENT,
+        user_agent=user_agent,
         viewport={"width": 1920, "height": 1080},
         locale="en-US",
         timezone_id="America/Chicago",
@@ -224,7 +236,7 @@ async def _new_context(browser: Browser) -> BrowserContext:
                 '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"'
             ),
             "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Ch-Ua-Platform": platform,
         },
     )
     return context
@@ -399,13 +411,27 @@ async def _extract_units_apartments(page: Page) -> list[dict[str, Any]]:
         '[data-tab-content-id]',
         '.priceGridModelWrapper',
       ];
-      const planNodes = new Set();
+      // Apartments.com sometimes renders the same unit list inside several
+      // nested wrappers (a summary card + a detail row under the same plan).
+      // Using more than one selector family at once produces massive duplicate
+      // counts. Pick the FIRST selector that finds matches and stop.
+      let planNodes = [];
       for (const sel of planSelectors) {
-        document.querySelectorAll(sel).forEach(n => planNodes.add(n));
+        const hits = Array.from(document.querySelectorAll(sel));
+        if (hits.length > 0) {
+          planNodes = hits;
+          break;
+        }
       }
-      if (planNodes.size === 0) {
-        document.querySelectorAll('[class*="pricing" i], [class*="floorplan" i]').forEach(n => planNodes.add(n));
+      if (planNodes.length === 0) {
+        planNodes = Array.from(
+          document.querySelectorAll('[class*="pricing" i], [class*="floorplan" i]')
+        );
       }
+      // Filter out ancestor/descendant overlaps — keep only outermost matches.
+      planNodes = planNodes.filter(
+        (n) => !planNodes.some((m) => m !== n && m.contains(n))
+      );
 
       const seen = new Set();
 
@@ -661,10 +687,12 @@ async def _rentcafe_fallback(page: Page, prop: PropertySpec) -> list[dict[str, A
 # ---------------------------------------------------------------------------
 
 
-async def scrape_property(context: BrowserContext, prop: PropertySpec) -> dict[str, Any]:
+async def scrape_property(browser: Browser, prop: PropertySpec) -> dict[str, Any]:
     print(f"→ {prop.name}")
+    context = await _new_context(browser)
     page = await context.new_page()
     await _apply_stealth(page)
+    await _warmup(page)
 
     result: dict[str, Any] = {
         "name": prop.name,
@@ -711,7 +739,7 @@ async def scrape_property(context: BrowserContext, prop: PropertySpec) -> dict[s
         result["units"] = []
         result["total_available"] = 0
     finally:
-        await page.close()
+        await context.close()
 
     return result
 
@@ -722,23 +750,18 @@ async def main() -> int:
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
-        context = await _new_context(browser)
-
-        # Warm the shared context up exactly once — subsequent property
-        # fetches inherit the same cookies/fingerprint, which keeps
-        # apartments.com from flagging each request as a cold session.
-        warmup_page = await context.new_page()
-        await _apply_stealth(warmup_page)
-        await _warmup(warmup_page)
-        await warmup_page.close()
 
         properties: list[dict[str, Any]] = []
         for idx, prop in enumerate(PROPERTIES):
             if idx > 0:
-                await asyncio.sleep(random.uniform(4, 7))
-            properties.append(await scrape_property(context, prop))
+                # Long, randomised gap between properties — each property
+                # uses a fresh context + user agent, so apartments.com sees
+                # them as 8 distinct visitors rather than one session.
+                delay = random.uniform(25, 45)
+                print(f"  (waiting {delay:.0f}s before next property)")
+                await asyncio.sleep(delay)
+            properties.append(await scrape_property(browser, prop))
 
-        await context.close()
         await browser.close()
 
     payload = {
