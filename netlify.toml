@@ -1,6 +1,6 @@
 [build]
   base = "dashboard"
-  command = "cp ../data/data.json public/data.json && npm run build"
+  command = "mkdir -p public && cp ../data/data.json public/data.json && npm run build"
   publish = "dist"
 
 [build.environment]
